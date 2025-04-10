@@ -1,0 +1,38 @@
+local light = cloneref(game:GetService("Lighting"))
+light.Technology = Enum.Technology.Future
+light.ClockTime = 7
+light.TimeOfDay = "07:00:00"
+light.Brightness = 2
+light.OutdoorAmbient = Color3.fromRGB(200, 200, 255)
+light.Ambient = Color3.fromRGB(255, 210, 160)
+light.FogEnd = 1000
+light.FogStart = 200
+light.FogColor = Color3.fromRGB(255, 170, 100)
+light.ClockTime = light.ClockTime + 0.0000001
+
+local sky = Instance.new("Sky", light)
+sky.Name = "SunriseSkybox"
+sky.SkyboxBk = "rbxassetid://541743453"
+sky.SkyboxDn = "rbxassetid://541743443"
+sky.SkyboxFt = "rbxassetid://541743446"
+sky.SkyboxLf = "rbxassetid://541743436"
+sky.SkyboxRt = "rbxassetid://541743435"
+sky.SkyboxUp = "rbxassetid://541743441"
+
+
+local colorCorr = Instance.new("ColorCorrectionEffect", light)
+colorCorr.Brightness = 0.1
+colorCorr.Contrast = 0.2
+colorCorr.Saturation = 0.3
+colorCorr.TintColor = Color3.fromRGB(255, 170, 120)
+
+local bloom = Instance.new("BloomEffect", light)
+bloom.Intensity = 0.5
+bloom.Size = 24
+bloom.Threshold = 2
+
+while true do
+    light.ClockTime = 7
+ task.wait(0.1)
+end
+
