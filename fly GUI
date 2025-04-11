@@ -1,0 +1,265 @@
+local flySpeed = 60
+local minSpeed = 30
+local maxSpeed = 500
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FlyControlGui"
+ScreenGui.Parent = game:GetService("CoreGui")
+
+local Frame = Instance.new("Frame")
+Frame.Name = "MainFrame"
+Frame.Size = UDim2.new(0, 200, 0, 150)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -75)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.BorderColor3 = Color3.fromRGB(20, 20, 20)
+Frame.BorderSizePixel = 2
+Frame.Active = true
+Frame.Draggable = true
+Frame.ClipsDescendants = true
+Frame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = Frame
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.BorderSizePixel = 0
+Title.Text = "Fly GUI"
+Title.TextColor3 = Color3.fromRGB(200, 200, 200)
+Title.Font = Enum.Font.Gotham
+Title.TextSize = 14
+Title.Parent = Frame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = Title
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0.9, 0, 0, 30)
+ToggleButton.Position = UDim2.new(0.05, 0, 0, 40)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = "Enable Fly"
+ToggleButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+ToggleButton.Font = Enum.Font.Gotham
+ToggleButton.TextSize = 12
+ToggleButton.Parent = Frame
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 6)
+ButtonCorner.Parent = ToggleButton
+
+local SpeedSlider = Instance.new("Frame")
+SpeedSlider.Name = "SpeedSlider"
+SpeedSlider.Size = UDim2.new(0.9, 0, 0, 50)
+SpeedSlider.Position = UDim2.new(0.05, 0, 0, 80)
+SpeedSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+SpeedSlider.BorderSizePixel = 0
+SpeedSlider.Parent = Frame
+
+local SliderCorner = Instance.new("UICorner")
+SliderCorner.CornerRadius = UDim.new(0, 6)
+SliderCorner.Parent = SpeedSlider
+
+local SpeedText = Instance.new("TextLabel")
+SpeedText.Name = "SpeedText"
+SpeedText.Size = UDim2.new(1, 0, 0, 20)
+SpeedText.Position = UDim2.new(0, 0, 0, 0)
+SpeedText.BackgroundTransparency = 1
+SpeedText.Text = "Speed: " .. flySpeed
+SpeedText.TextColor3 = Color3.fromRGB(200, 200, 200)
+SpeedText.Font = Enum.Font.Gotham
+SpeedText.TextSize = 12
+SpeedText.Parent = SpeedSlider
+
+local SliderBar = Instance.new("Frame")
+SliderBar.Name = "SliderBar"
+SliderBar.Size = UDim2.new(0.9, 0, 0, 6)
+SliderBar.Position = UDim2.new(0.05, 0, 0, 25)
+SliderBar.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+SliderBar.BorderSizePixel = 0
+SliderBar.Parent = SpeedSlider
+
+local BarCorner = Instance.new("UICorner")
+BarCorner.CornerRadius = UDim.new(0, 3)
+BarCorner.Parent = SliderBar
+
+local SliderFill = Instance.new("Frame")
+SliderFill.Name = "SliderFill"
+SliderFill.Size = UDim2.new((flySpeed - minSpeed) / (maxSpeed - minSpeed), 0, 1, 0)
+SliderFill.Position = UDim2.new(0, 0, 0, 0)
+SliderFill.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+SliderFill.BorderSizePixel = 0
+SliderFill.Parent = SliderBar
+
+local FillCorner = Instance.new("UICorner")
+FillCorner.CornerRadius = UDim.new(0, 3)
+FillCorner.Parent = SliderFill
+
+local SliderButton = Instance.new("TextButton")
+SliderButton.Name = "SliderButton"
+SliderButton.Size = UDim2.new(0, 20, 0, 20)
+SliderButton.Position = UDim2.new((flySpeed - minSpeed) / (maxSpeed - minSpeed), -10, 0.5, -10)
+SliderButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+SliderButton.BorderSizePixel = 0
+SliderButton.Text = ""
+SliderButton.Parent = SliderBar
+
+local SliderButtonCorner = Instance.new("UICorner")
+SliderButtonCorner.CornerRadius = UDim.new(0, 10)
+SliderButtonCorner.Parent = SliderButton
+
+local flying = false
+local flyConnection = nil
+local plr = game:GetService("Players").LocalPlayer
+local rs = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local function disableFlight()
+    if flying then
+        flying = false
+        ToggleButton.Text = "Enable Fly"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        
+        if plr.Character and plr.Character:FindFirstChildOfClass("Humanoid") then
+            plr.Character.Humanoid.PlatformStand = false
+            
+            local bv = plr.Character.HumanoidRootPart:FindFirstChild("VelocityHandler")
+            if bv then
+                bv.MaxForce = Vector3.new(0, 0, 0)
+                bv:Destroy()
+            end
+            
+            local bg = plr.Character.HumanoidRootPart:FindFirstChild("GyroHandler")
+            if bg then
+                bg.MaxTorque = Vector3.new(0, 0, 0)
+                bg:Destroy()
+            end
+        end
+        
+        if flyConnection then
+            flyConnection:Disconnect()
+            flyConnection = nil
+        end
+    end
+end
+
+local function enableFlight()
+    if not flying then
+        flying = true
+        ToggleButton.Text = "Disable Fly"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        
+        local camera = Workspace.CurrentCamera
+        local controlModule = require(plr.PlayerScripts:WaitForChild('PlayerModule'):WaitForChild("ControlModule"))
+        
+        -- Create or update BodyVelocity
+        local bv = plr.Character.HumanoidRootPart:FindFirstChild("VelocityHandler") or Instance.new("BodyVelocity")
+        bv.Name = "VelocityHandler"
+        bv.Parent = plr.Character.HumanoidRootPart
+        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bv.Velocity = Vector3.new(0, 0, 0)
+        
+        -- Create or update BodyGyro
+        local bg = plr.Character.HumanoidRootPart:FindFirstChild("GyroHandler") or Instance.new("BodyGyro")
+        bg.Name = "GyroHandler"
+        bg.Parent = plr.Character.HumanoidRootPart
+        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bg.P = 1000
+        bg.D = 50
+        
+        -- Enable flying
+        plr.Character.Humanoid.PlatformStand = true
+        
+        -- Main flying loop
+        flyConnection = rs.RenderStepped:Connect(function()
+            if not flying or not plr.Character or not plr.Character:FindFirstChildOfClass("Humanoid") or 
+               not plr.Character.Humanoid.RootPart or plr.Character.Humanoid.Health <= 0 or
+               not plr.Character.HumanoidRootPart:FindFirstChild("VelocityHandler") or 
+               not plr.Character.HumanoidRootPart:FindFirstChild("GyroHandler") then
+                disableFlight()
+                return
+            end
+            
+            bg.CFrame = camera.CoordinateFrame
+            local direction = controlModule:GetMoveVector()
+            bv.Velocity = Vector3.new()
+            
+            if direction.X ~= 0 then
+                bv.Velocity = bv.Velocity + camera.CFrame.RightVector * (direction.X * flySpeed)
+            end
+            if direction.Z ~= 0 then
+                bv.Velocity = bv.Velocity - camera.CFrame.LookVector * (direction.Z * flySpeed)
+            end
+        end)
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    if flying then
+        disableFlight()
+    else
+        enableFlight()
+    end
+end)
+
+plr.CharacterAdded:Connect(function(character)
+    character:WaitForChild("Humanoid").Died:Connect(function()
+        disableFlight()
+    end)
+end)
+
+local sliding = false
+
+local function updateSlider(input)
+    if sliding then
+        local sliderAbsolutePosition = SliderBar.AbsolutePosition
+        local sliderAbsoluteSize = SliderBar.AbsoluteSize
+        
+        local touchPosition
+        if input.UserInputType == Enum.UserInputType.Touch then
+            touchPosition = input.Position
+        else
+            touchPosition = UserInputService:GetMouseLocation()
+        end
+        
+        local relativeX = (touchPosition.X - sliderAbsolutePosition.X) / sliderAbsoluteSize.X
+        relativeX = math.clamp(relativeX, 0, 1)
+        
+        SliderButton.Position = UDim2.new(relativeX, -10, 0.5, -10)
+        SliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
+        
+        flySpeed = math.floor(minSpeed + (maxSpeed - minSpeed) * relativeX)
+        SpeedText.Text = "Speed: " .. flySpeed
+    end
+end
+
+SliderButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        sliding = true
+    end
+end)
+
+SliderBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        sliding = true
+        updateSlider(input)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        sliding = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if sliding and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+        updateSlider(input)
+    end
+end)
