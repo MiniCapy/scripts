@@ -1,0 +1,231 @@
+--T.me://CapyExploits
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local Player = Players.LocalPlayer
+local speaker = Player
+local hb = RunService.Heartbeat
+
+local TPGui = Instance.new("ScreenGui")
+TPGui.Name = "TPWalkingGUI"
+TPGui.Parent = CoreGui
+TPGui.ResetOnSpawn = false
+
+local BG = Instance.new("Frame")
+BG.Name = "BG"
+BG.Parent = TPGui
+BG.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+BG.BorderSizePixel = 0
+BG.Position = UDim2.new(0.3, 0, 0.4, 0)
+BG.Size = UDim2.new(0, 220, 0, 160)
+BG.Active = true
+BG.Draggable = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = BG
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Parent = BG
+Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Title.BorderSizePixel = 0
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "TP Walking"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 24
+Title.ClipsDescendants = true
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = Title
+
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Parent = Title
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Position = UDim2.new(0.85, 0, 0.1, 0)
+MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 20
+MinimizeButton.AutoButtonColor = false
+
+local MinimizeCorner = Instance.new("UICorner")
+MinimizeCorner.CornerRadius = UDim.new(0, 4)
+MinimizeCorner.Parent = MinimizeButton
+
+local SpeedBox = Instance.new("TextBox")
+SpeedBox.Name = "SpeedBox"
+SpeedBox.Parent = BG
+SpeedBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+SpeedBox.BorderSizePixel = 0
+SpeedBox.Position = UDim2.new(0.05, 0, 0.25, 0)
+SpeedBox.Size = UDim2.new(0.9, 0, 0, 25)
+SpeedBox.Font = Enum.Font.GothamSemibold
+SpeedBox.Text = "10"
+SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedBox.TextSize = 16
+SpeedBox.PlaceholderText = "Enter speed (default: 10)"
+SpeedBox.ClearTextOnFocus = false
+
+local SpeedBoxCorner = Instance.new("UICorner")
+SpeedBoxCorner.CornerRadius = UDim.new(0, 4)
+SpeedBoxCorner.Parent = SpeedBox
+
+local Toggle = Instance.new("TextButton")
+Toggle.Name = "Toggle"
+Toggle.Parent = BG
+Toggle.Size = UDim2.new(0.9, 0, 0, 40)
+Toggle.Position = UDim2.new(0.05, 0, 0.55, 0)
+Toggle.Text = "Start TP Walking"
+Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+Toggle.Font = Enum.Font.GothamSemibold
+Toggle.TextSize = 20
+Toggle.BorderSizePixel = 0
+Toggle.BackgroundTransparency = 0.1
+Toggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 6)
+ToggleCorner.Parent = Toggle
+
+local tpwalking = false
+local isMinimized = false
+local speed = 10
+local normalSize = UDim2.new(0, 220, 0, 160)
+local minimizedSize = UDim2.new(0, 220, 0, 30)
+
+local function buttonClickAnimation(button)
+    local originalColor = button.BackgroundColor3
+    local darkerColor = Color3.new(
+        math.max(0, originalColor.r - 0.2),
+        math.max(0, originalColor.g - 0.2),
+        math.max(0, originalColor.b - 0.2)
+    )
+    
+    local tweenIn = TweenService:Create(
+        button,
+        TweenInfo.new(0.1),
+        {BackgroundColor3 = darkerColor}
+    )
+    
+    local tweenOut = TweenService:Create(
+        button,
+        TweenInfo.new(0.2),
+        {BackgroundColor3 = originalColor}
+    )
+    
+    tweenIn:Play()
+    tweenIn.Completed:Connect(function()
+        tweenOut:Play()
+    end)
+end
+
+local function fadeElement(element, targetTransparency, hideAfter)
+    local tween = TweenService:Create(
+        element,
+        TweenInfo.new(0.2),
+        {BackgroundTransparency = targetTransparency, TextTransparency = targetTransparency}
+    )
+    tween:Play()
+    
+    if hideAfter then
+        tween.Completed:Connect(function()
+            element.Visible = false
+        end)
+    end
+    return tween
+end
+
+local function toggleMinimize()
+    isMinimized = not isMinimized
+    MinimizeButton.Text = isMinimized and "+" or "-"
+    
+    --T.me://CapyExploits
+    local sizeTween = TweenService:Create(
+        BG,
+        TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+        {Size = isMinimized and minimizedSize or normalSize}
+    )
+    sizeTween:Play()
+    
+    --T.me://CapyExploits
+    if isMinimized then
+        fadeElement(SpeedBox, 1, true)
+        fadeElement(Toggle, 1, true)
+    else
+        SpeedBox.Visible = true
+        Toggle.Visible = true
+        fadeElement(SpeedBox, 0.1)
+        fadeElement(Toggle, 0.1)
+    end
+end
+
+local function resetTPWalk()
+    tpwalking = false
+    Toggle.Text = "Start TP Walking"
+    
+    local tween = TweenService:Create(
+        Toggle,
+        TweenInfo.new(0.3),
+        {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}
+    )
+    tween:Play()
+end
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    toggleMinimize()
+end)
+
+SpeedBox.FocusLost:Connect(function(enterPressed)
+    local newSpeed = tonumber(SpeedBox.Text)
+    if newSpeed and newSpeed > 0 then
+        speed = newSpeed
+    elseif SpeedBox.Text == "" then
+        speed = 10
+        SpeedBox.Text = ""
+    else
+        SpeedBox.Text = "" 
+        speed = 10
+    end
+end)
+
+Toggle.MouseButton1Click:Connect(function()
+    buttonClickAnimation(Toggle)
+    
+    tpwalking = not tpwalking
+    Toggle.Text = tpwalking and "Stop TP Walking" or "Start TP Walking"
+    
+    local targetColor = tpwalking and Color3.fromRGB(70, 130, 180) or Color3.fromRGB(50, 50, 50)
+    local tween = TweenService:Create(
+        Toggle,
+        TweenInfo.new(0.3),
+        {BackgroundColor3 = targetColor}
+    )
+    tween:Play()
+
+    local chr = speaker.Character or speaker.CharacterAdded:Wait()
+    local hum = chr:FindFirstChildWhichIsA("Humanoid")
+    
+    while tpwalking and chr and hum and hum.Parent do
+        local delta = hb:Wait()
+        if hum.MoveDirection.Magnitude > 0 then
+            chr:TranslateBy(hum.MoveDirection * delta * speed)
+        end
+    end
+end)
+
+speaker.CharacterAdded:Connect(function(character)
+    resetTPWalk()
+end)
+
+SpeedBox.BackgroundTransparency = 0.1
+SpeedBox.TextTransparency = 0
+Toggle.BackgroundTransparency = 0.1
+Toggle.TextTransparency = 0
