@@ -1,0 +1,102 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local highlightEnabled = true
+local highlightColor = Color3.fromRGB(255, 0, 0)
+local highlightOutlineColor = highlightColor
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HighlightToggleUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "ToggleButton"
+toggleButton.Size = UDim2.new(0, 120, 0, 40)
+toggleButton.Position = UDim2.new(1, -130, 0, 10)
+toggleButton.AnchorPoint = Vector2.new(0, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Text = "Highlight: ON"
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 14
+toggleButton.Parent = screenGui
+
+local function updateButtonText()
+    toggleButton.Text = "Highlight: " .. (highlightEnabled and "ON" or "OFF")
+end
+
+toggleButton.MouseButton1Click:Connect(function()
+    highlightEnabled = not highlightEnabled
+    updateButtonText()
+end)
+
+local playerHighlights = {}
+
+local function createHighlight(player)
+    if player == LocalPlayer then return end
+    
+    local character = player.Character or player.CharacterAdded:Wait()
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = player.Name .. "_Highlight"
+    highlight.FillColor = highlightColor
+    highlight.OutlineColor = highlightOutlineColor
+    highlight.Enabled = highlightEnabled
+    highlight.Parent = character
+    
+    playerHighlights[player] = {
+        highlight = highlight
+    }
+    
+    local existingBillboard = character:FindFirstChild(player.Name .. "_Info")
+    if existingBillboard then
+        existingBillboard:Destroy()
+    end
+end
+
+local function toggleAllHighlights(enable)
+    for _, highlightData in pairs(playerHighlights) do
+        if highlightData.highlight then
+            highlightData.highlight.Enabled = enable
+        end
+    end
+end
+
+local function removeHighlight(player)
+    if playerHighlights[player] then
+        if playerHighlights[player].highlight then
+            playerHighlights[player].highlight:Destroy()
+        end
+        playerHighlights[player] = nil
+    end
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        if player.Character then
+            createHighlight(player)
+        end
+        player.CharacterAdded:Connect(function(character)
+            createHighlight(player)
+        end)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        player.CharacterAdded:Connect(function(character)
+            createHighlight(player)
+        end)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    removeHighlight(player)
+end)
+
+RunService.Heartbeat:Connect(function()
+    toggleAllHighlights(highlightEnabled)
+end)
