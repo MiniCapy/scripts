@@ -1,0 +1,127 @@
+local Player = game:GetService("Players").LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SpinBotGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Name = "MainFrame"
+Frame.Size = UDim2.new(0, 200, 0, 150)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -75)
+Frame.AnchorPoint = Vector2.new(0.5, 0.5)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.ClipsDescendants = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = Frame
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.Text = "Spin Bot"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamSemibold
+Title.TextSize = 18
+Title.BorderSizePixel = 0
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = Title
+
+local SpeedBox = Instance.new("TextBox")
+SpeedBox.Name = "SpeedBox"
+SpeedBox.Size = UDim2.new(0.8, 0, 0, 30)
+SpeedBox.Position = UDim2.new(0.1, 0, 0.25, 0)
+SpeedBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedBox.PlaceholderText = "Speed (any number)"
+SpeedBox.Font = Enum.Font.Gotham
+SpeedBox.TextSize = 14
+SpeedBox.Text = "20"
+SpeedBox.ClearTextOnFocus = false
+
+local SpeedBoxCorner = Instance.new("UICorner")
+SpeedBoxCorner.CornerRadius = UDim.new(0, 8)
+SpeedBoxCorner.Parent = SpeedBox
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0.8, 0, 0, 40)
+ToggleButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamSemibold
+ToggleButton.TextSize = 16
+ToggleButton.Text = "Enable"
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 8)
+ToggleCorner.Parent = ToggleButton
+
+Title.Parent = Frame
+SpeedBox.Parent = Frame
+ToggleButton.Parent = Frame
+Frame.Parent = ScreenGui
+
+local spinning = false
+local spinPart = nil
+
+local function getRoot(character)
+    return character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+end
+
+local function spinCharacter(speed)
+    if not Player.Character then return end
+    
+    local root = getRoot(Player.Character)
+    if not root then return end
+    
+    for i,v in pairs(root:GetChildren()) do
+        if v.Name == "Spinning" then
+            v:Destroy()
+        end
+    end
+    
+    local Spin = Instance.new("BodyAngularVelocity")
+    Spin.Name = "Spinning"
+    Spin.Parent = root
+    Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+    Spin.AngularVelocity = Vector3.new(0, speed, 0)
+    Spin.P = 100000
+    
+    return Spin
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    spinning = not spinning
+    
+    if spinning then
+        local speed = tonumber(SpeedBox.Text) or 20
+        spinPart = spinCharacter(speed)
+        ToggleButton.Text = "Disable"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
+    else
+        if spinPart then
+            spinPart:Destroy()
+            spinPart = nil
+        end
+        ToggleButton.Text = "Enable"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    end
+end)
+
+Player.CharacterAdded:Connect(function(character)
+    if spinning then
+        local speed = tonumber(SpeedBox.Text) or 20
+        spinPart = spinCharacter(speed)
+    end
+end)
