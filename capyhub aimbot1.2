@@ -1,0 +1,195 @@
+local Player = game:GetService("Players").LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CapyHubAimbot"
+ScreenGui.Parent = game:GetService("CoreGui") or Player:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 200, 0, 65)
+MainFrame.Position = UDim2.new(0.5, -100, 0.1, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 25)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Title.BorderSizePixel = 0
+Title.Text = "capyhub aimbot"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = Title
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 25, 0, 25)
+ToggleButton.Position = UDim2.new(1, -25, 0, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = "-"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 14
+ToggleButton.Parent = MainFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 8)
+ToggleCorner.Parent = ToggleButton
+
+local AimbotButton = Instance.new("TextButton")
+AimbotButton.Name = "AimbotButton"
+AimbotButton.Size = UDim2.new(1, -10, 0, 30)
+AimbotButton.Position = UDim2.new(0, 5, 0, 30)
+AimbotButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+AimbotButton.BorderSizePixel = 0
+AimbotButton.Text = "AIMBOT: OFF"
+AimbotButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+AimbotButton.Font = Enum.Font.GothamBold
+AimbotButton.TextSize = 14
+AimbotButton.Parent = MainFrame
+
+local AimbotCorner = Instance.new("UICorner")
+AimbotCorner.CornerRadius = UDim.new(0, 6)
+AimbotCorner.Parent = AimbotButton
+
+local ClickSound = Instance.new("Sound")
+ClickSound.SoundId = "rbxassetid://421058925"
+ClickSound.Volume = 0.5
+ClickSound.Parent = ScreenGui
+
+local CircleFrame = Instance.new("Frame")
+CircleFrame.Name = "AimbotCircle"
+CircleFrame.Size = UDim2.new(0, 200, 0, 200)
+CircleFrame.Position = UDim2.new(0.5, -100, 0.5, -100)
+CircleFrame.BackgroundTransparency = 1
+CircleFrame.BorderSizePixel = 0
+CircleFrame.Parent = ScreenGui
+
+local CircleUI = Instance.new("UICorner")
+CircleUI.CornerRadius = UDim.new(1, 0)
+CircleUI.Parent = CircleFrame
+
+local CircleStroke = Instance.new("UIStroke")
+CircleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+CircleStroke.Color = Color3.new(0, 0, 0)
+CircleStroke.Thickness = 2
+CircleStroke.LineJoinMode = Enum.LineJoinMode.Round
+CircleStroke.Parent = CircleFrame
+
+local function updateCircleSize()
+    local viewportSize = Camera.ViewportSize
+    local radius = 100
+    local diameter = radius * 2
+    
+    CircleFrame.Size = UDim2.new(0, diameter, 0, diameter)
+    CircleFrame.Position = UDim2.new(0.5, -radius, 0.5, -radius)
+end
+
+Camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateCircleSize)
+updateCircleSize()
+
+local function playClickSound()
+    ClickSound:Play()
+end
+
+local isExpanded = true
+local aimbotEnabled = false
+local target = nil
+
+local function toggleUI()
+    playClickSound()
+    isExpanded = not isExpanded
+    if isExpanded then
+        MainFrame.Size = UDim2.new(0, 200, 0, 65)
+        ToggleButton.Text = "-"
+    else
+        MainFrame.Size = UDim2.new(0, 200, 0, 25)
+        ToggleButton.Text = "+"
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(toggleUI)
+
+local function findTargetInCircle()
+    local closestPlayer = nil
+    local closestDistance = math.huge
+    
+    for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+        if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = player.Character.HumanoidRootPart
+            local screenPoint, visible = Camera:WorldToViewportPoint(rootPart.Position)
+            
+            if visible then
+                local center = Vector2.new(CircleFrame.AbsolutePosition.X + CircleFrame.AbsoluteSize.X/2, 
+                                          CircleFrame.AbsolutePosition.Y + CircleFrame.AbsoluteSize.Y/2)
+                local point = Vector2.new(screenPoint.X, screenPoint.Y)
+                local distance = (point - center).Magnitude
+                
+                if distance <= CircleFrame.AbsoluteSize.X/2 then
+                    local realDistance = (rootPart.Position - Camera.CFrame.Position).Magnitude
+                    if realDistance < closestDistance then
+                        closestDistance = realDistance
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+local function updateAimbot()
+    if aimbotEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") then
+        target = findTargetInCircle()
+        
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPos = target.Character.HumanoidRootPart.Position
+            local camera = workspace.CurrentCamera
+            camera.CFrame = CFrame.new(camera.CFrame.Position, targetPos)
+        end
+    end
+end
+
+AimbotButton.MouseButton1Click:Connect(function()
+    playClickSound()
+    aimbotEnabled = not aimbotEnabled
+    if aimbotEnabled then
+        AimbotButton.Text = "AIMBOT: ON"
+        AimbotButton.TextColor3 = Color3.fromRGB(50, 255, 50)
+        CircleFrame.Visible = true
+    else
+        AimbotButton.Text = "AIMBOT: OFF"
+        AimbotButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+        target = nil
+        CircleFrame.Visible = false
+    end
+end)
+
+CircleFrame.Visible = false
+
+game:GetService("Players").PlayerRemoving:Connect(function(plr)
+    if plr == Player then
+        CircleFrame:Destroy()
+    end
+end)
+
+RunService.RenderStepped:Connect(updateAimbot)
