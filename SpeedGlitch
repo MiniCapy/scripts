@@ -1,0 +1,41 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+local defaultWalkSpeed = humanoid.WalkSpeed
+local glitchSpeed = 35
+local isSpeedGlitchActive = false
+
+local function updateSpeed()
+    if not humanoid then return end
+    
+    if not humanoid:GetStateEnabled(Enum.HumanoidStateType.Running) then
+        humanoid.WalkSpeed = defaultWalkSpeed
+        isSpeedGlitchActive = false
+        return
+    end
+    
+    if humanoid:GetState() == Enum.HumanoidStateType.Freefall or humanoid:GetState() == Enum.HumanoidStateType.Jumping then
+        if not isSpeedGlitchActive then
+            humanoid.WalkSpeed = glitchSpeed
+            isSpeedGlitchActive = true
+        end
+    else
+        if isSpeedGlitchActive then
+            humanoid.WalkSpeed = defaultWalkSpeed
+            isSpeedGlitchActive = false
+        end
+    end
+end
+
+humanoid.StateChanged:Connect(function(_, newState)
+    updateSpeed()
+end)
+
+humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+    if humanoid.WalkSpeed ~= glitchSpeed and humanoid.WalkSpeed ~= defaultWalkSpeed then
+        defaultWalkSpeed = humanoid.WalkSpeed
+    end
+end)
+
+updateSpeed()
