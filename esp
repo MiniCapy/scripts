@@ -2,14 +2,6 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 
-local ESP_SETTINGS = {
-    Enabled = true,
-    HighlightColor = Color3.fromRGB(220, 220, 220),
-    TextColor = Color3.fromRGB(255, 255, 255),
-    TextTransparency = 0.3,
-    TeamColor = false
-}
-
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ESP_GUI"
 screenGui.Parent = CoreGui
@@ -33,18 +25,19 @@ corner.Parent = button
 
 button.Parent = screenGui
 
-button.MouseButton1Click:Connect(function()
-    ESP_SETTINGS.Enabled = not ESP_SETTINGS.Enabled
-    button.Text = ESP_SETTINGS.Enabled and "ESP: ON" or "ESP: OFF"
+local espEnabled = true
+local espCache = {}
 
-    if not ESP_SETTINGS.Enabled then
+button.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    button.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+
+    if not espEnabled then
         clearESP()
     else
         createESP()
     end
 end)
-
-local espCache = {}
 
 function clearESP()
     for _, cache in pairs(espCache) do
@@ -77,7 +70,7 @@ function createESPForPlayer(player)
     highlight.Name = "ESP_Highlight"
     highlight.Adornee = character
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.FillColor = ESP_SETTINGS.HighlightColor
+    highlight.FillColor = Color3.fromRGB(220, 220, 220)
     highlight.FillTransparency = 0.7
     highlight.OutlineColor = Color3.fromRGB(180, 180, 180)
     highlight.OutlineTransparency = 0.2
@@ -96,8 +89,8 @@ function createESPForPlayer(player)
     nameText.Size = UDim2.new(1, 0, 1, 0)
     nameText.BackgroundTransparency = 1
     nameText.Text = player.Name
-    nameText.TextColor3 = ESP_SETTINGS.TextColor
-    nameText.TextTransparency = ESP_SETTINGS.TextTransparency
+    nameText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameText.TextTransparency = 0.3
     nameText.TextStrokeTransparency = 1
     nameText.TextSize = 16
     nameText.Font = Enum.Font.GothamSemibold
@@ -127,14 +120,14 @@ function createESPForPlayer(player)
 end
 
 RunService.Heartbeat:Connect(function()
-    if not ESP_SETTINGS.Enabled then return end
+    if not espEnabled then return end
 
     for player, cache in pairs(espCache) do
         local character = player.Character
         if character then
             if cache.highlight then
                 cache.highlight.Enabled = true
-                cache.highlight.FillColor = ESP_SETTINGS.HighlightColor
+                cache.highlight.FillColor = Color3.fromRGB(220, 220, 220)
             end
 
             if cache.name then
@@ -149,7 +142,7 @@ end)
 
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
-        if ESP_SETTINGS.Enabled then
+        if espEnabled then
             createESPForPlayer(player)
         end
     end)
