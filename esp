@@ -1,0 +1,163 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+
+local ESP_SETTINGS = {
+    Enabled = true,
+    HighlightColor = Color3.fromRGB(220, 220, 220),
+    TextColor = Color3.fromRGB(255, 255, 255),
+    TextTransparency = 0.3,
+    TeamColor = false
+}
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ESP_GUI"
+screenGui.Parent = CoreGui
+
+local button = Instance.new("TextButton")
+button.Name = "ESP_Toggle"
+button.Size = UDim2.new(0, 100, 0, 40)
+button.Position = UDim2.new(1, -110, 0, 10)
+button.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+button.BackgroundTransparency = 0.7
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Text = "ESP: ON"
+button.TextSize = 14
+button.Font = Enum.Font.Gotham
+button.BorderSizePixel = 0
+button.BorderColor3 = Color3.fromRGB(150, 150, 150)
+button.AutoButtonColor = false
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = button
+
+button.Parent = screenGui
+
+button.MouseButton1Click:Connect(function()
+    ESP_SETTINGS.Enabled = not ESP_SETTINGS.Enabled
+    button.Text = ESP_SETTINGS.Enabled and "ESP: ON" or "ESP: OFF"
+
+    if not ESP_SETTINGS.Enabled then
+        clearESP()
+    else
+        createESP()
+    end
+end)
+
+local espCache = {}
+
+function clearESP()
+    for _, cache in pairs(espCache) do
+        if cache.highlight then cache.highlight:Destroy() end
+        if cache.name then cache.name:Destroy() end
+    end
+    espCache = {}
+end
+
+function createESP()
+    clearESP()
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            createESPForPlayer(player)
+        end
+    end
+end
+
+function createESPForPlayer(player)
+    local character = player.Character or player.CharacterAdded:Wait()
+    local head = character:FindFirstChild("Head")
+
+    if not head then
+        character.ChildAdded:Wait()
+        head = character:FindFirstChild("Head")
+    end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESP_Highlight"
+    highlight.Adornee = character
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.FillColor = ESP_SETTINGS.HighlightColor
+    highlight.FillTransparency = 0.7
+    highlight.OutlineColor = Color3.fromRGB(180, 180, 180)
+    highlight.OutlineTransparency = 0.2
+    highlight.Parent = character
+
+    local nameLabel = Instance.new("BillboardGui")
+    nameLabel.Name = "ESP_Name"
+    nameLabel.Adornee = head
+    nameLabel.AlwaysOnTop = true
+    nameLabel.Size = UDim2.new(0, 200, 0, 50)
+    nameLabel.ExtentsOffset = Vector3.new(0, 3, 0)
+    nameLabel.Parent = head
+
+    local nameText = Instance.new("TextLabel")
+    nameText.Name = "NameText"
+    nameText.Size = UDim2.new(1, 0, 1, 0)
+    nameText.BackgroundTransparency = 1
+    nameText.Text = player.Name
+    nameText.TextColor3 = ESP_SETTINGS.TextColor
+    nameText.TextTransparency = ESP_SETTINGS.TextTransparency
+    nameText.TextStrokeTransparency = 1
+    nameText.TextSize = 16
+    nameText.Font = Enum.Font.GothamSemibold
+    nameText.Parent = nameLabel
+
+    espCache[player] = {
+        highlight = highlight,
+        name = nameLabel,
+        player = player
+    }
+
+    player.CharacterAdded:Connect(function(newChar)
+        if espCache[player] then
+            if espCache[player].highlight then espCache[player].highlight:Destroy() end
+            if espCache[player].name then espCache[player].name:Destroy() end
+        end
+        createESPForPlayer(player)
+    end)
+
+    player.CharacterRemoving:Connect(function()
+        if espCache[player] then
+            if espCache[player].highlight then espCache[player].highlight:Destroy() end
+            if espCache[player].name then espCache[player].name:Destroy() end
+            espCache[player] = nil
+        end
+    end)
+end
+
+RunService.Heartbeat:Connect(function()
+    if not ESP_SETTINGS.Enabled then return end
+
+    for player, cache in pairs(espCache) do
+        local character = player.Character
+        if character then
+            if cache.highlight then
+                cache.highlight.Enabled = true
+                cache.highlight.FillColor = ESP_SETTINGS.HighlightColor
+            end
+
+            if cache.name then
+                cache.name.Enabled = true
+            end
+        else
+            if cache.highlight then cache.highlight.Enabled = false end
+            if cache.name then cache.name.Enabled = false end
+        end
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        if ESP_SETTINGS.Enabled then
+            createESPForPlayer(player)
+        end
+    end)
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= Players.LocalPlayer then
+        createESPForPlayer(player)
+    end
+end
