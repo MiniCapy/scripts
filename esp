@@ -24,7 +24,6 @@ button.TextColor3 = Color3.fromRGB(255, 255, 255)
 button.Text = "ESP: ON"
 button.TextSize = 14
 button.Font = Enum.Font.Gotham
-button.BorderSizePixel = 2
 button.BorderColor3 = Color3.fromRGB(150, 150, 150)
 button.AutoButtonColor = false
 
