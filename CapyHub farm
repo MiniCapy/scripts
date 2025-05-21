@@ -1,0 +1,217 @@
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+local TweenService = game:GetService("TweenService")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CoinFarmGUI"
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 200, 0, 170)
+MainFrame.Position = UDim2.new(0.5, -100, 0.5, -85)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 25)
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Title.BorderSizePixel = 0
+Title.Text = "CapyHub Farm | Universal"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Parent = MainFrame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 30, 0, 30)
+ToggleButton.Position = UDim2.new(0, 10, 0, 10)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = "+"
+ToggleButton.TextSize = 20
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Parent = ScreenGui
+
+local FarmTypeLabel = Instance.new("TextLabel")
+FarmTypeLabel.Name = "FarmTypeLabel"
+FarmTypeLabel.Size = UDim2.new(0.8, 0, 0, 20)
+FarmTypeLabel.Position = UDim2.new(0.1, 0, 0.2, 0)
+FarmTypeLabel.BackgroundTransparency = 1
+FarmTypeLabel.Text = "Farm Type:"
+FarmTypeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+FarmTypeLabel.TextXAlignment = Enum.TextXAlignment.Left
+FarmTypeLabel.Parent = MainFrame
+
+local FarmType = Instance.new("TextButton")
+FarmType.Name = "FarmType"
+FarmType.Size = UDim2.new(0.8, 0, 0, 25)
+FarmType.Position = UDim2.new(0.1, 0, 0.3, 0)
+FarmType.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+FarmType.BorderSizePixel = 0
+FarmType.Text = "Teleport"
+FarmType.TextColor3 = Color3.fromRGB(255, 255, 255)
+FarmType.Parent = MainFrame
+
+local CooldownLabel = Instance.new("TextLabel")
+CooldownLabel.Name = "CooldownLabel"
+CooldownLabel.Size = UDim2.new(0.8, 0, 0, 20)
+CooldownLabel.Position = UDim2.new(0.1, 0, 0.5, 0)
+CooldownLabel.BackgroundTransparency = 1
+CooldownLabel.Text = "Teleport Cooldown: 1.0s"
+CooldownLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+CooldownLabel.TextXAlignment = Enum.TextXAlignment.Left
+CooldownLabel.Parent = MainFrame
+
+local CooldownSlider = Instance.new("TextButton")
+CooldownSlider.Name = "CooldownSlider"
+CooldownSlider.Size = UDim2.new(0.8, 0, 0, 15)
+CooldownSlider.Position = UDim2.new(0.1, 0, 0.6, 0)
+CooldownSlider.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+CooldownSlider.BorderSizePixel = 0
+CooldownSlider.Text = ""
+CooldownSlider.Parent = MainFrame
+
+local CooldownFill = Instance.new("Frame")
+CooldownFill.Name = "CooldownFill"
+CooldownFill.Size = UDim2.new(0.5, 0, 1, 0)
+CooldownFill.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+CooldownFill.BorderSizePixel = 0
+CooldownFill.Parent = CooldownSlider
+
+local ToggleFarm = Instance.new("TextButton")
+ToggleFarm.Name = "ToggleFarm"
+ToggleFarm.Size = UDim2.new(0.8, 0, 0, 30)
+ToggleFarm.Position = UDim2.new(0.1, 0, 0.8, 0)
+ToggleFarm.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ToggleFarm.BorderSizePixel = 0
+ToggleFarm.Text = "Start Farm"
+ToggleFarm.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleFarm.Parent = MainFrame
+
+local farmEnabled = false
+local currentFarmType = "teleport"
+local teleportCooldown = 1.0
+local coinParts = {}
+
+local function updateCoinParts()
+    coinParts = {}
+    for _, part in ipairs(workspace:GetDescendants()) do
+        if part.Name:lower():find("coin") and part:IsA("BasePart") then
+            table.insert(coinParts, part)
+        end
+    end
+end
+
+local function teleportToCoin(coin)
+    if not coin or not coin.Parent then return end
+    local humanoid = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.RootPart.CFrame = coin.CFrame + Vector3.new(0, 3, 0)
+    end
+end
+
+local function tweenToCoin(coin)
+    if not coin or not coin.Parent then return end
+    local humanoid = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        local tweenInfo = TweenInfo.new(teleportCooldown, Enum.EasingStyle.Linear)
+        local goal = {}
+        goal.CFrame = coin.CFrame + Vector3.new(0, 3, 0)
+        local tween = TweenService:Create(humanoid.RootPart, tweenInfo, goal)
+        tween:Play()
+        tween.Completed:Wait()
+    end
+end
+
+local function farmCoins()
+    while farmEnabled and #coinParts > 0 do
+        updateCoinParts()
+        table.sort(coinParts, function(a, b)
+            local char = Player.Character
+            if not char then return false end
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if not root then return false end
+            return (root.Position - a.Position).Magnitude < (root.Position - b.Position).Magnitude
+        end)
+        
+        for _, coin in ipairs(coinParts) do
+            if not farmEnabled then break end
+            if coin and coin.Parent then
+                if currentFarmType == "teleport" then
+                    teleportToCoin(coin)
+                else
+                    tweenToCoin(coin)
+                end
+                wait(teleportCooldown)
+            end
+        end
+        wait(0.1)
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+local toggleButtonStartPos
+ToggleButton.MouseButton1Down:Connect(function()
+    toggleButtonStartPos = Vector2.new(ToggleButton.Position.X.Offset, ToggleButton.Position.Y.Offset)
+end)
+
+Mouse.Move:Connect(function()
+    if toggleButtonStartPos and ToggleButton:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+        local delta = Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(ToggleButton.AbsolutePosition.X, ToggleButton.AbsolutePosition.Y)
+        ToggleButton.Position = UDim2.new(0, toggleButtonStartPos.X + delta.X, 0, toggleButtonStartPos.Y + delta.Y)
+    end
+end)
+
+Mouse.Button1Up:Connect(function()
+    toggleButtonStartPos = nil
+end)
+
+FarmType.MouseButton1Click:Connect(function()
+    if currentFarmType == "teleport" then
+        currentFarmType = "tween"
+        FarmType.Text = "Tween"
+    else
+        currentFarmType = "teleport"
+        FarmType.Text = "Teleport"
+    end
+end)
+
+CooldownSlider.MouseButton1Down:Connect(function()
+    local connection
+    connection = Mouse.Move:Connect(function()
+        local x = Mouse.X - CooldownSlider.AbsolutePosition.X
+        local percent = math.clamp(x / CooldownSlider.AbsoluteSize.X, 0, 1)
+        CooldownFill.Size = UDim2.new(percent, 0, 1, 0)
+        teleportCooldown = math.floor((percent * 4.9 + 0.1) * 10) / 10
+        CooldownLabel.Text = "Teleport Cooldown: " .. string.format("%.1fs", teleportCooldown)
+    end)
+    
+    local function disconnect()
+        connection:Disconnect()
+    end
+    
+    Mouse.Button1Up:Connect(disconnect)
+end)
+
+ToggleFarm.MouseButton1Click:Connect(function()
+    farmEnabled = not farmEnabled
+    if farmEnabled then
+        ToggleFarm.Text = "Stop Farm"
+        spawn(farmCoins)
+    else
+        ToggleFarm.Text = "Start Farm"
+    end
+end)
+
+updateCoinParts()
