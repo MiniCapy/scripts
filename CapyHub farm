@@ -158,20 +158,25 @@ end
 
 local function teleportToCoin(coin)
     if not coin or not coin.Parent then return end
-    local humanoid = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        humanoid.RootPart.CFrame = coin.CFrame + Vector3.new(0, 3, 0)
+    local character = Player.Character
+    if not character then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if humanoid and rootPart then
+        rootPart.CFrame = coin.CFrame + Vector3.new(0, 3, 0)
     end
 end
 
 local function tweenToCoin(coin)
     if not coin or not coin.Parent then return end
-    local humanoid = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
+    local character = Player.Character
+    if not character then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if humanoid and rootPart then
         local tweenInfo = TweenInfo.new(teleportCooldown, Enum.EasingStyle.Linear)
-        local goal = {}
-        goal.CFrame = coin.CFrame + Vector3.new(0, 3, 0)
-        local tween = TweenService:Create(humanoid.RootPart, tweenInfo, goal)
+        local goal = { CFrame = coin.CFrame + Vector3.new(0, 3, 0) }
+        local tween = TweenService:Create(rootPart, tweenInfo, goal)
         tween:Play()
         tween.Completed:Wait()
     end
@@ -201,6 +206,19 @@ local function farmCoins()
         end
         wait(0.1)
     end
+end
+
+local function onCharacterAdded(character)
+    updateCoinParts()
+    if farmEnabled then
+        spawn(farmCoins)
+    end
+end
+
+Player.CharacterAdded:Connect(onCharacterAdded)
+
+if Player.Character then
+    onCharacterAdded(Player.Character)
 end
 
 ToggleButton.MouseButton1Click:Connect(function()
@@ -261,5 +279,3 @@ ToggleFarm.MouseButton1Click:Connect(function()
         ToggleFarm.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     end
 end)
-
-updateCoinParts()
