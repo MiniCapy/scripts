@@ -2,6 +2,11 @@ local Player = game:GetService("Players").LocalPlayer
 local Mouse = Player:GetMouse()
 local TweenService = game:GetService("TweenService")
 
+local Gotham = Enum.Font.SourceSans
+if pcall(function() return Enum.Font.Gotham end) then
+    Gotham = Enum.Font.Gotham
+end
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CoinFarmGUI"
 ScreenGui.Parent = Player:WaitForChild("PlayerGui")
@@ -9,92 +14,133 @@ ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 200, 0, 170)
-MainFrame.Position = UDim2.new(0.5, -100, 0.5, -85)
+MainFrame.Size = UDim2.new(0, 210, 0, 180)
+MainFrame.Position = UDim2.new(0.5, -105, 0.5, -90)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
 local Title = Instance.new("TextLabel")
 Title.Name = "Title"
-Title.Size = UDim2.new(1, 0, 0, 25)
-Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Title.BorderSizePixel = 0
+Title.Font = Gotham
 Title.Text = "CapyHub Farm | Universal"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextColor3 = Color3.fromRGB(220, 220, 220)
+Title.TextSize = 14
 Title.Parent = MainFrame
+
+local UICorner2 = Instance.new("UICorner")
+UICorner2.CornerRadius = UDim.new(0, 8)
+UICorner2.Parent = Title
 
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleButton"
-ToggleButton.Size = UDim2.new(0, 30, 0, 30)
+ToggleButton.Size = UDim2.new(0, 32, 0, 32)
 ToggleButton.Position = UDim2.new(0, 10, 0, 10)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 ToggleButton.BorderSizePixel = 0
-ToggleButton.Text = "+"
-ToggleButton.TextSize = 20
+ToggleButton.Text = "🍇"
+ToggleButton.Font = Gotham
+ToggleButton.TextSize = 18
+ToggleButton.TextColor3 = Color3.fromRGB(220, 220, 220)
 ToggleButton.Active = true
 ToggleButton.Draggable = true
 ToggleButton.Parent = ScreenGui
 
+local UICorner3 = Instance.new("UICorner")
+UICorner3.CornerRadius = UDim.new(0, 6)
+UICorner3.Parent = ToggleButton
+
 local FarmTypeLabel = Instance.new("TextLabel")
 FarmTypeLabel.Name = "FarmTypeLabel"
-FarmTypeLabel.Size = UDim2.new(0.8, 0, 0, 20)
-FarmTypeLabel.Position = UDim2.new(0.1, 0, 0.2, 0)
+FarmTypeLabel.Size = UDim2.new(0.9, 0, 0, 20)
+FarmTypeLabel.Position = UDim2.new(0.05, 0, 0.22, 0)
 FarmTypeLabel.BackgroundTransparency = 1
+FarmTypeLabel.Font = Gotham
 FarmTypeLabel.Text = "Farm Type:"
-FarmTypeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+FarmTypeLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+FarmTypeLabel.TextSize = 12
 FarmTypeLabel.TextXAlignment = Enum.TextXAlignment.Left
 FarmTypeLabel.Parent = MainFrame
 
 local FarmType = Instance.new("TextButton")
 FarmType.Name = "FarmType"
-FarmType.Size = UDim2.new(0.8, 0, 0, 25)
-FarmType.Position = UDim2.new(0.1, 0, 0.3, 0)
-FarmType.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+FarmType.Size = UDim2.new(0.9, 0, 0, 28)
+FarmType.Position = UDim2.new(0.05, 0, 0.32, 0)
+FarmType.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 FarmType.BorderSizePixel = 0
+FarmType.Font = Gotham
 FarmType.Text = "Teleport"
-FarmType.TextColor3 = Color3.fromRGB(255, 255, 255)
+FarmType.TextColor3 = Color3.fromRGB(220, 220, 220)
+FarmType.TextSize = 12
 FarmType.Parent = MainFrame
+
+local UICorner4 = Instance.new("UICorner")
+UICorner4.CornerRadius = UDim.new(0, 6)
+UICorner4.Parent = FarmType
 
 local CooldownLabel = Instance.new("TextLabel")
 CooldownLabel.Name = "CooldownLabel"
-CooldownLabel.Size = UDim2.new(0.8, 0, 0, 20)
-CooldownLabel.Position = UDim2.new(0.1, 0, 0.5, 0)
+CooldownLabel.Size = UDim2.new(0.9, 0, 0, 20)
+CooldownLabel.Position = UDim2.new(0.05, 0, 0.52, 0)
 CooldownLabel.BackgroundTransparency = 1
+CooldownLabel.Font = Gotham
 CooldownLabel.Text = "Teleport Cooldown: 1.0s"
-CooldownLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+CooldownLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+CooldownLabel.TextSize = 12
 CooldownLabel.TextXAlignment = Enum.TextXAlignment.Left
 CooldownLabel.Parent = MainFrame
 
 local CooldownSlider = Instance.new("TextButton")
 CooldownSlider.Name = "CooldownSlider"
-CooldownSlider.Size = UDim2.new(0.8, 0, 0, 15)
-CooldownSlider.Position = UDim2.new(0.1, 0, 0.6, 0)
-CooldownSlider.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+CooldownSlider.Size = UDim2.new(0.9, 0, 0, 16)
+CooldownSlider.Position = UDim2.new(0.05, 0, 0.62, 0)
+CooldownSlider.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 CooldownSlider.BorderSizePixel = 0
 CooldownSlider.Text = ""
 CooldownSlider.Parent = MainFrame
 
+local UICorner5 = Instance.new("UICorner")
+UICorner5.CornerRadius = UDim.new(0, 8)
+UICorner5.Parent = CooldownSlider
+
 local CooldownFill = Instance.new("Frame")
 CooldownFill.Name = "CooldownFill"
 CooldownFill.Size = UDim2.new(0.5, 0, 1, 0)
-CooldownFill.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+CooldownFill.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 CooldownFill.BorderSizePixel = 0
 CooldownFill.Parent = CooldownSlider
 
+local UICorner6 = Instance.new("UICorner")
+UICorner6.CornerRadius = UDim.new(0, 8)
+UICorner6.Parent = CooldownFill
+
 local ToggleFarm = Instance.new("TextButton")
 ToggleFarm.Name = "ToggleFarm"
-ToggleFarm.Size = UDim2.new(0.8, 0, 0, 30)
-ToggleFarm.Position = UDim2.new(0.1, 0, 0.8, 0)
-ToggleFarm.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ToggleFarm.Size = UDim2.new(0.9, 0, 0, 32)
+ToggleFarm.Position = UDim2.new(0.05, 0, 0.8, 0)
+ToggleFarm.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 ToggleFarm.BorderSizePixel = 0
+ToggleFarm.Font = Gotham
 ToggleFarm.Text = "Start Farm"
-ToggleFarm.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleFarm.TextColor3 = Color3.fromRGB(220, 220, 220)
+ToggleFarm.TextSize = 14
 ToggleFarm.Parent = MainFrame
+
+local UICorner7 = Instance.new("UICorner")
+UICorner7.CornerRadius = UDim.new(0, 6)
+UICorner7.Parent = ToggleFarm
 
 local farmEnabled = false
 local currentFarmType = "teleport"
@@ -208,9 +254,11 @@ ToggleFarm.MouseButton1Click:Connect(function()
     farmEnabled = not farmEnabled
     if farmEnabled then
         ToggleFarm.Text = "Stop Farm"
+        ToggleFarm.BackgroundColor3 = Color3.fromRGB(60, 45, 45)
         spawn(farmCoins)
     else
         ToggleFarm.Text = "Start Farm"
+        ToggleFarm.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     end
 end)
 
