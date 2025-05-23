@@ -1,0 +1,263 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Aimbot Script",
+    LoadingTitle = "Aimbot by Grok",
+    LoadingSubtitle = "Loading...",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "AimbotConfig",
+        FileName = "Settings"
+    }
+})
+
+local AimbotTab = Window:CreateTab("Aimbot", 4483362458)
+local ESPTab = Window:CreateTab("ESP", 4483362458)
+
+local AimbotSettings = {
+    Enabled = false,
+    TeamCheck = false,
+    DeathCheck = true,
+    WallCheck = false,
+    AimPart = "Head",
+    Sensitivity = 1.0,
+    FovRadius = 150,
+    CircleColor = Color3.fromRGB(122, 0, 255)
+}
+
+local ESPSettings = {
+    Enabled = false,
+    OutlineColor = Color3.fromRGB(122, 0, 255),
+    FillColor = Color3.fromRGB(122, 0, 255),
+    FillTransparency = 0.7
+}
+
+local FOVring = Drawing.new("Circle")
+FOVring.Visible = false
+FOVring.Radius = AimbotSettings.FovRadius
+FOVring.Color = AimbotSettings.CircleColor
+FOVring.Transparency = 0.7
+FOVring.NumSides = 64
+FOVring.Thickness = 1.5
+FOVring.Filled = false
+
+local function updateCirclePosition()
+    local viewportSize = workspace.CurrentCamera.ViewportSize
+    FOVring.Position = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+end
+updateCirclePosition()
+
+local ESPObjects = {}
+
+local function createESP(player)
+    if player == game.Players.LocalPlayer then return end
+    local Character = player.Character
+    if not Character then return end
+
+    local Highlight = Instance.new("Highlight")
+    Highlight.Adornee = Character
+    Highlight.FillColor = ESPSettings.FillColor
+    Highlight.OutlineColor = ESPSettings.OutlineColor
+    Highlight.FillTransparency = ESPSettings.FillTransparency
+    Highlight.OutlineTransparency = 0
+    Highlight.Enabled = ESPSettings.Enabled
+    Highlight.Parent = game.CoreGui
+
+    ESPObjects[player] = {Highlight = Highlight}
+
+    local function updateESP()
+        if not ESPSettings.Enabled or not player.Character or not player.Character:FindFirstChild("Humanoid") or (AimbotSettings.DeathCheck and player.Character.Humanoid.Health <= 0) then
+            Highlight.Enabled = false
+            return
+        end
+        Highlight.Enabled = not AimbotSettings.TeamCheck or player.Team ~= game.Players.LocalPlayer.Team
+        Highlight.Adornee = player.Character
+    end
+
+    game:GetService("RunService"):BindToRenderStep("ESP_" .. player.Name, Enum.RenderPriority.Camera.Value, updateESP)
+
+    player.AncestryChanged:Connect(function()
+        if not player.Parent then
+            Highlight:Destroy()
+            game:GetService("RunService"):UnbindFromRenderStep("ESP_" .. player.Name)
+            ESPObjects[player] = nil
+        end
+    end)
+end
+
+local function updateAllESP()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if not ESPObjects[player] then
+            createESP(player)
+        end
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(player)
+    createESP(player)
+end)
+
+game.Players.PlayerRemoving:Connect(function(player)
+    if ESPObjects[player] then
+        ESPObjects[player].Highlight:Destroy()
+        game:GetService("RunService"):UnbindFromRenderStep("ESP_" .. player.Name)
+        ESPObjects[player] = nil
+    end
+end)
+
+local function getClosestPlayer()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local Camera = workspace.CurrentCamera
+    local ClosestPlayer = nil
+    local ClosestDistance = AimbotSettings.FovRadius
+
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            local Character = Player.Character
+            if Character and Character:FindFirstChild(AimbotSettings.AimPart) then
+                local Humanoid = Character:FindFirstChild("Humanoid")
+                if Humanoid and (not AimbotSettings.DeathCheck or Humanoid.Health > 0) then
+                    if not AimbotSettings.TeamCheck or Player.Team ~= LocalPlayer.Team then
+                        local PartPos = Character[AimbotSettings.AimPart].Position
+                        local ScreenPos, OnScreen = Camera:WorldToViewportPoint(PartPos)
+                        if OnScreen then
+                            local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                            local Distance = (Center - Vector2.new(ScreenPos.X, ScreenPos.Y)).Magnitude
+                            if Distance < ClosestDistance then
+                                if not AimbotSettings.WallCheck then
+                                    ClosestDistance = Distance
+                                    ClosestPlayer = Player
+                                else
+                                    local ray = Ray.new(Camera.CFrame.Position, (PartPos - Camera.CFrame.Position).Unit * 1000)
+                                    local hit = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character or {}})
+                                    if hit and hit:IsDescendantOf(Character) then
+                                        ClosestDistance = Distance
+                                        ClosestPlayer = Player
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return ClosestPlayer
+end
+
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local function aimAtTarget()
+    if not AimbotSettings.Enabled then return end
+    local Target = getClosestPlayer()
+    if Target then
+        local TargetPart = Target.Character[AimbotSettings.AimPart]
+        local TargetPos = TargetPart.Position
+        local CameraPos = Camera.CFrame.Position
+        local Direction = (TargetPos - CameraPos).Unit
+        local LookAtCFrame = CFrame.new(CameraPos, CameraPos + Direction)
+        
+        local CurrentCFrame = Camera.CFrame
+        local NewCFrame = CurrentCFrame:Lerp(LookAtCFrame, AimbotSettings.Sensitivity)
+        Camera.CFrame = CFrame.new(CurrentCFrame.Position, NewCFrame.Position + NewCFrame.LookVector)
+    end
+end
+
+RunService:BindToRenderStep("Aimbot", Enum.RenderPriority.Camera.Value, aimAtTarget)
+
+AimbotTab:CreateToggle({
+    Name = "Aimbot Enabled",
+    CurrentValue = AimbotSettings.Enabled,
+    Callback = function(Value)
+        AimbotSettings.Enabled = Value
+        FOVring.Visible = Value
+    end
+})
+
+AimbotTab:CreateToggle({
+    Name = "Team Check",
+    CurrentValue = AimbotSettings.TeamCheck,
+    Callback = function(Value)
+        AimbotSettings.TeamCheck = Value
+    end
+})
+
+AimbotTab:CreateToggle({
+    Name = "Death Check",
+    CurrentValue = AimbotSettings.DeathCheck,
+    Callback = function(Value)
+        AimbotSettings.DeathCheck = Value
+    end
+})
+
+AimbotTab:CreateToggle({
+    Name = "Wall Check",
+    CurrentValue = AimbotSettings.WallCheck,
+    Callback = function(Value)
+        AimbotSettings.WallCheck = Value
+    end
+})
+
+AimbotTab:CreateDropdown({
+    Name = "Aim Part",
+    Options = {"Head", "Torso", "HumanoidRootPart"},
+    CurrentOption = AimbotSettings.AimPart,
+    Callback = function(Value)
+        AimbotSettings.AimPart = Value
+    end
+})
+
+AimbotTab:CreateSlider({
+    Name = "Sensitivity",
+    Range = {0.1, 1.0},
+    Increment = 0.05,
+    CurrentValue = AimbotSettings.Sensitivity,
+    Callback = function(Value)
+        AimbotSettings.Sensitivity = Value
+    end
+})
+
+AimbotTab:CreateSlider({
+    Name = "FOV Radius",
+    Range = {50, 500},
+    Increment = 10,
+    CurrentValue = AimbotSettings.FovRadius,
+    Callback = function(Value)
+        AimbotSettings.FovRadius = Value
+        FOVring.Radius = Value
+    end
+})
+
+AimbotTab:CreateColorPicker({
+    Name = "Circle Color",
+    Color = AimbotSettings.CircleColor,
+    Callback = function(Value)
+        AimbotSettings.CircleColor = Value
+        FOVring.Color = Value
+    end
+})
+
+ESPTab:CreateToggle({
+    Name = "ESP Enabled",
+    CurrentValue = ESPSettings.Enabled,
+    Callback = function(Value)
+        ESPSettings.Enabled = Value
+        updateAllESP()
+    end
+})
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+        updateCirclePosition()
+    end
+end)
+
+updateAllESP()
+
+Rayfield:Notify({
+    Title = "Aimbot Loaded",
+    Content = "Aimbot and ESP script by Grok is ready for PC and Mobile!",
+    Duration = 5
+})
