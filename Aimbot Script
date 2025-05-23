@@ -22,13 +22,13 @@ local AimbotSettings = {
     AimPart = "Head",
     Sensitivity = 1.0,
     FovRadius = 150,
-    CircleColor = Color3.fromRGB(122, 0, 255)
+    CircleColor = Color3.fromRGB(255, 255, 255)
 }
 
 local ESPSettings = {
     Enabled = false,
-    OutlineColor = Color3.fromRGB(122, 0, 255),
-    FillColor = Color3.fromRGB(122, 0, 255),
+    OutlineColor = Color3.fromRGB(255, 255, 255),
+    FillColor = Color3.fromRGB(255, 255, 255),
     FillTransparency = 0.7
 }
 
@@ -260,4 +260,4 @@ Rayfield:Notify({
     Title = "Aimbot Loaded",
     Content = "Aimbot and ESP script by Grok is ready for PC and Mobile!",
     Duration = 5
-})
+}) 
