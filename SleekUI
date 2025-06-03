@@ -1,16 +1,16 @@
---//SleekGui by grok\\
--- SleekUI Library (Mobile-Optimized)
+--//SleekGui by grok\\         
+-- SleekUI Library (Mobile-Optimized with Scrollable Tabs and Hide/Show)
 local SleekUI = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 -- Theme Configuration
 local Theme = {
-    PrimaryColor = Color3.fromRGB(35, 35, 35), -- Darker, sleek background
-    SecondaryColor = Color3.fromRGB(50, 50, 50), -- Slightly lighter for contrast
-    AccentColor = Color3.fromRGB(0, 140, 255), -- Vibrant accent for interactivity
-    TextColor = Color3.fromRGB(240, 240, 240), -- Softer white for readability
-    HoverColor = Color3.fromRGB(70, 70, 70), -- Subtle hover effect
+    PrimaryColor = Color3.fromRGB(35, 35, 35), -- Sleek dark background
+    SecondaryColor = Color3.fromRGB(50, 50, 50), -- Contrast for elements
+    AccentColor = Color3.fromRGB(0, 140, 255), -- Vibrant accent
+    TextColor = Color3.fromRGB(240, 240, 240), -- Soft white text
+    HoverColor = Color3.fromRGB(70, 70, 70), -- Hover effect
 }
 
 -- Utility Functions
@@ -25,27 +25,26 @@ function SleekUI:CreateWindow(title)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     ScreenGui.Name = "SleekUI_" .. title
-    ScreenGui.IgnoreGuiInset = true -- Ensures full-screen compatibility
+    ScreenGui.IgnoreGuiInset = true
     ScreenGui.ResetOnSpawn = false
 
-    -- Main Frame (Wider, Shorter for Mobile)
+    -- Main Frame (Wider, Shorter)
     local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 500, 0, 350) -- Wider and shorter
-    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175) -- Centered
+    MainFrame.Size = UDim2.new(0, 500, 0, 350)
+    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
     MainFrame.BackgroundColor3 = Theme.PrimaryColor
     MainFrame.BorderSizePixel = 0
-    MainFrame.Active = true -- Enable dragging
-    MainFrame.Draggable = true -- Make draggable for mobile and PC
+    MainFrame.Active = true
+    MainFrame.Draggable = true
     MainFrame.Parent = ScreenGui
 
-    -- Rounded Corners
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 12) -- Softer, modern rounded edges
+    UICorner.CornerRadius = UDim.new(0, 12)
     UICorner.Parent = MainFrame
 
     -- Title Bar
     local TitleBar = Instance.new("Frame")
-    TitleBar.Size = UDim2.new(1, 0, 0, 40) -- Taller title bar for touch
+    TitleBar.Size = UDim2.new(1, 0, 0, 40)
     TitleBar.BackgroundColor3 = Theme.SecondaryColor
     TitleBar.BorderSizePixel = 0
     TitleBar.Parent = MainFrame
@@ -55,29 +54,66 @@ function SleekUI:CreateWindow(title)
     TitleUICorner.Parent = TitleBar
 
     local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(1, -20, 1, 0)
+    TitleLabel.Size = UDim2.new(0.8, -20, 1, 0)
     TitleLabel.Position = UDim2.new(0, 10, 0, 0)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Text = title
     TitleLabel.TextColor3 = Theme.TextColor
     TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.TextSize = 16 -- Larger text for mobile readability
+    TitleLabel.TextSize = 16
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = TitleBar
 
-    -- Tab Container (Sidebar)
-    local TabContainer = Instance.new("Frame")
-    TabContainer.Size = UDim2.new(0, 120, 1, -40) -- Wider tabs for touch
+    -- Hide/Show Button
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Size = UDim2.new(0, 40, 0, 40)
+    ToggleButton.Position = UDim2.new(1, -50, 0, 0)
+    ToggleButton.BackgroundColor3 = Theme.SecondaryColor
+    ToggleButton.Text = "−"
+    ToggleButton.TextColor3 = Theme.TextColor
+    ToggleButton.Font = Enum.Font.Gotham
+    ToggleButton.TextSize = 16
+    ToggleButton.Parent = TitleBar
+
+    local ToggleUICorner = Instance.new("UICorner")
+    ToggleUICorner.CornerRadius = UDim.new(0, 8)
+    ToggleUICorner.Parent = ToggleButton
+
+    local isVisible = true
+    ToggleButton.MouseButton1Click:Connect(function()
+        isVisible = not isVisible
+        ToggleButton.Text = isVisible and "−" or "+"
+        Utility:Tween(MainFrame, {Size = isVisible and UDim2.new(0, 500, 0, 350) or UDim2.new(0, 500, 0, 40)}, 0.3)
+    end)
+    ToggleButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            isVisible = not isVisible
+            ToggleButton.Text = isVisible and "−" or "+"
+            Utility:Tween(MainFrame, {Size = isVisible and UDim2.new(0, 500, 0, 350) or UDim2.new(0, 500, 0, 40)}, 0.3)
+        end
+    end)
+
+    -- Tab Container (Scrollable)
+    local TabContainer = Instance.new("ScrollingFrame")
+    TabContainer.Size = UDim2.new(0, 120, 1, -40)
     TabContainer.Position = UDim2.new(0, 0, 0, 40)
     TabContainer.BackgroundColor3 = Theme.SecondaryColor
     TabContainer.BorderSizePixel = 0
+    TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0) -- Auto-adjusted
+    TabContainer.ScrollBarThickness = 4
+    TabContainer.ScrollBarImageColor3 = Theme.AccentColor
     TabContainer.Parent = MainFrame
 
     local TabLayout = Instance.new("UIListLayout")
     TabLayout.FillDirection = Enum.FillDirection.Vertical
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    TabLayout.Padding = UDim.new(0, 8) -- More spacing for touch
+    TabLayout.Padding = UDim.new(0, 8)
     TabLayout.Parent = TabContainer
+
+    -- Update CanvasSize dynamically
+    TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        TabContainer.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
+    end)
 
     -- Content Frame
     local ContentFrame = Instance.new("Frame")
@@ -94,13 +130,13 @@ function SleekUI:CreateWindow(title)
     function Window:CreateTab(tabName)
         local Tab = {}
         local TabButton = Instance.new("TextButton")
-        TabButton.Size = UDim2.new(1, -10, 0, 40) -- Larger for touch
+        TabButton.Size = UDim2.new(1, -10, 0, 40)
         TabButton.Position = UDim2.new(0, 5, 0, 0)
         TabButton.BackgroundColor3 = Theme.SecondaryColor
         TabButton.Text = tabName
         TabButton.TextColor3 = Theme.TextColor
         TabButton.Font = Enum.Font.Gotham
-        TabButton.TextSize = 14 -- Larger text
+        TabButton.TextSize = 14
         TabButton.Parent = TabContainer
 
         local TabUICorner = Instance.new("UICorner")
@@ -116,7 +152,7 @@ function SleekUI:CreateWindow(title)
 
         local ContentLayout = Instance.new("UIListLayout")
         ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        ContentLayout.Padding = UDim.new(0, 8) -- More spacing
+        ContentLayout.Padding = UDim.new(0, 8)
         ContentLayout.Parent = TabContent
 
         TabButton.MouseButton1Click:Connect(function()
@@ -134,11 +170,28 @@ function SleekUI:CreateWindow(title)
                 end
             end
         end)
+        TabButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                if CurrentTab ~= TabContent then
+                    if CurrentTab then
+                        CurrentTab.Visible = false
+                    end
+                    TabContent.Visible = true
+                    CurrentTab = TabContent
+                    Utility:Tween(TabButton, {BackgroundColor3 = Theme.AccentColor}, 0.3)
+                    for _, btn in pairs(TabContainer:GetChildren()) do
+                        if btn:IsA("TextButton") and btn ~= TabButton then
+                            Utility:Tween(btn, {BackgroundColor3 = Theme.SecondaryColor}, 0.3)
+                        end
+                    end
+                end
+            end
+        end)
 
         -- Create Button
         function Tab:CreateButton(name, callback)
             local Button = Instance.new("TextButton")
-            Button.Size = UDim2.new(1, -10, 0, 40) -- Taller for touch
+            Button.Size = UDim2.new(1, -10, 0, 40)
             Button.BackgroundColor3 = Theme.SecondaryColor
             Button.Text = name
             Button.TextColor3 = Theme.TextColor
@@ -159,8 +212,6 @@ function SleekUI:CreateWindow(title)
             Button.MouseButton1Click:Connect(function()
                 callback()
             end)
-
-            -- Mobile Touch Support
             Button.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.Touch then
                     Utility:Tween(Button, {BackgroundColor3 = Theme.HoverColor}, 0.2)
@@ -196,7 +247,7 @@ function SleekUI:CreateWindow(title)
             Label.Parent = Toggle
 
             local ToggleButton = Instance.new("TextButton")
-            ToggleButton.Size = UDim2.new(0, 50, 0, 24) -- Larger for touch
+            ToggleButton.Size = UDim2.new(0, 50, 0, 24)
             ToggleButton.Position = UDim2.new(1, -55, 0.5, -12)
             ToggleButton.BackgroundColor3 = Theme.SecondaryColor
             ToggleButton.Text = ""
@@ -226,8 +277,6 @@ function SleekUI:CreateWindow(title)
                 end
                 callback(toggled)
             end)
-
-            -- Mobile Touch Support
             ToggleButton.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.Touch then
                     toggled = not toggled
@@ -244,7 +293,7 @@ function SleekUI:CreateWindow(title)
         -- Create Slider
         function Tab:CreateSlider(name, min, max, callback)
             local Slider = Instance.new("Frame")
-            Slider.Size = UDim2.new(1, -10, 0, 60) -- Taller for touch
+            Slider.Size = UDim2.new(1, -10, 0, 60)
             Slider.BackgroundColor3 = Theme.SecondaryColor
             Slider.Parent = TabContent
 
@@ -263,7 +312,7 @@ function SleekUI:CreateWindow(title)
             Label.Parent = Slider
 
             local SliderBar = Instance.new("Frame")
-            SliderBar.Size = UDim2.new(1, -10, 0, 8) -- Thicker for touch
+            SliderBar.Size = UDim2.new(1, -10, 0, 8)
             SliderBar.Position = UDim2.new(0, 5, 0, 35)
             SliderBar.BackgroundColor3 = Theme.PrimaryColor
             SliderBar.Parent = Slider
@@ -339,17 +388,24 @@ function SleekUI:CreateWindow(title)
             DropUICorner.CornerRadius = UDim.new(0, 8)
             DropUICorner.Parent = DropButton
 
-            local DropFrame = Instance.new("Frame")
+            local DropFrame = Instance.new("ScrollingFrame")
             DropFrame.Size = UDim2.new(1, -10, 0, 0)
             DropFrame.Position = UDim2.new(0, 5, 0, 45)
             DropFrame.BackgroundColor3 = Theme.SecondaryColor
             DropFrame.Visible = false
+            DropFrame.ScrollBarThickness = 4
+            DropFrame.ScrollBarImageColor3 = Theme.AccentColor
+            DropFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
             DropFrame.Parent = TabContent
 
             local DropLayout = Instance.new("UIListLayout")
             DropLayout.SortOrder = Enum.SortOrder.LayoutOrder
             DropLayout.Padding = UDim.new(0, 4)
             DropLayout.Parent = DropFrame
+
+            DropLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                DropFrame.CanvasSize = UDim2.new(0, 0, 0, DropLayout.AbsoluteContentSize.Y)
+            end)
 
             local DropUICorner = Instance.new("UICorner")
             DropUICorner.CornerRadius = UDim.new(0, 8)
@@ -359,14 +415,13 @@ function SleekUI:CreateWindow(title)
             DropButton.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
                 DropFrame.Visible = isOpen
-                Utility:Tween(DropFrame, {Size = isOpen and UDim2.new(1, -10, 0, #options * 35) or UDim2.new(1, -10, 0, 0)}, 0.3)
+                Utility:Tween(DropFrame, {Size = isOpen and UDim2.new(1, -10, 0, math.min(#options * 35, 140)) or UDim2.new(1, -10, 0, 0)}, 0.3)
             end)
-
             DropButton.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.Touch then
                     isOpen = not isOpen
                     DropFrame.Visible = isOpen
-                    Utility:Tween(DropFrame, {Size = isOpen and UDim2.new(1, -10, 0, #options * 35) or UDim2.new(1, -10, 0, 0)}, 0.3)
+                    Utility:Tween(DropFrame, {Size = isOpen and UDim2.new(1, -10, 0, math.min(#options * 35, 140)) or UDim2.new(1, -10, 0, 0)}, 0.3)
                 end
             end)
 
@@ -391,7 +446,6 @@ function SleekUI:CreateWindow(title)
                     Utility:Tween(DropFrame, {Size = UDim2.new(1, -10, 0, 0)}, 0.3)
                     callback(option)
                 end)
-
                 OptionButton.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.Touch then
                         Label.Text = name .. ": " .. option
