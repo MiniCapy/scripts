@@ -1,0 +1,38 @@
+--mango🩷🥭
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+screenGui.Name = "mangoGui"
+
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(0, 400, 0, 100)
+textLabel.Position = UDim2.new(0.5, -200, 0.5, -50)
+textLabel.Text = "манго🥭"
+textLabel.Font = Enum.Font.SourceSansBold
+textLabel.TextSize = 60
+textLabel.TextColor3 = Color3.fromRGB(255, 174, 0)
+textLabel.BackgroundTransparency = 1
+textLabel.Parent = screenGui
+
+local function updManGo()
+    while true do
+        for i = 0, 1, 0.01 do
+            textLabel.TextColor3 = Color3.fromRGB(
+                255,
+                174 - (74 * i),
+                0
+            )
+            wait(0.03)
+        end
+        for i = 0, 1, 0.01 do
+            textLabel.TextColor3 = Color3.fromRGB(
+                255,
+                100 + (74 * i),
+                0
+            )
+            wait(0.03)
+        end
+    end
+end
+
+spawn(updManGo)
