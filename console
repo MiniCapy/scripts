@@ -1,0 +1,223 @@
+local Players = game:GetService("Players")
+local LogService = game:GetService("LogService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local backgroundColor = Color3.fromRGB(30, 30, 30)
+local buttonColor = Color3.fromRGB(255, 180, 180)
+local inputColor = Color3.fromRGB(60, 60, 60)
+local textColor = Color3.fromRGB(255, 255, 255)
+local highlightColor = Color3.fromRGB(255, 200, 200)
+local cornerSize = UDim.new(0, 6)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "CustomConsole"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = playerGui
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 36, 0, 36)
+toggleButton.Position = UDim2.new(0, 10, 0, 60)
+toggleButton.Text = "<>"
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 18
+toggleButton.BackgroundColor3 = buttonColor
+toggleButton.TextColor3 = textColor
+toggleButton.BorderSizePixel = 0
+toggleButton.ZIndex = 10
+toggleButton.Parent = gui
+Instance.new("UICorner", toggleButton).CornerRadius = cornerSize
+
+local consoleFrame = Instance.new("Frame")
+consoleFrame.Size = UDim2.new(0.4, 0, 1, 0)
+consoleFrame.Position = UDim2.new(1, 0, 0, 0)
+consoleFrame.BackgroundColor3 = backgroundColor
+consoleFrame.BorderSizePixel = 0
+consoleFrame.Visible = true
+consoleFrame.ZIndex = 5
+consoleFrame.Parent = gui
+Instance.new("UICorner", consoleFrame).CornerRadius = cornerSize
+
+local searchBox = Instance.new("TextBox")
+searchBox.PlaceholderText = "Search logs..."
+searchBox.Size = UDim2.new(0.3, -20, 0, 36)
+searchBox.Position = UDim2.new(0, 20, 0, 20)
+searchBox.Font = Enum.Font.Gotham
+searchBox.TextSize = 16
+searchBox.TextColor3 = textColor
+searchBox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
+searchBox.BackgroundColor3 = inputColor
+searchBox.Text = ""
+searchBox.ZIndex = 6
+searchBox.Parent = consoleFrame
+Instance.new("UICorner", searchBox).CornerRadius = cornerSize
+
+local copyButton = Instance.new("TextButton")
+copyButton.Text = "Copy Selected"
+copyButton.Size = UDim2.new(0, 100, 0, 30)
+copyButton.Position = UDim2.new(0, 20, 0, 70)
+copyButton.Font = Enum.Font.Gotham
+copyButton.TextSize = 16
+copyButton.TextColor3 = textColor
+copyButton.BackgroundColor3 = buttonColor
+copyButton.ZIndex = 6
+copyButton.Parent = consoleFrame
+Instance.new("UICorner", copyButton).CornerRadius = cornerSize
+
+local clearButton = Instance.new("TextButton")
+clearButton.Text = "Clear Logs"
+clearButton.Size = UDim2.new(0, 100, 0, 30)
+clearButton.Position = UDim2.new(0, 130, 0, 70)
+clearButton.Font = Enum.Font.Gotham
+clearButton.TextSize = 16
+clearButton.TextColor3 = textColor
+clearButton.BackgroundColor3 = buttonColor
+clearButton.ZIndex = 6
+clearButton.Parent = consoleFrame
+Instance.new("UICorner", clearButton).CornerRadius = cornerSize
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(1, -40, 1, -120)
+scroll.Position = UDim2.new(0, 20, 0, 110)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 8
+scroll.ScrollBarImageColor3 = Color3.fromRGB(160, 160, 160)
+scroll.ZIndex = 5
+scroll.Parent = consoleFrame
+
+local layout = Instance.new("UIListLayout")
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 6)
+layout.Parent = scroll
+
+local selectedLogs = {}
+
+local function addLog(msg, msgType)
+	local logFrame = Instance.new("Frame")
+	logFrame.Size = UDim2.new(1, -10, 0, 0)
+	logFrame.BackgroundColor3 = inputColor
+	logFrame.AutomaticSize = Enum.AutomaticSize.Y
+	logFrame.ZIndex = 5
+	logFrame.Parent = scroll
+	Instance.new("UICorner", logFrame).CornerRadius = cornerSize
+
+	local markButton = Instance.new("TextButton")
+	markButton.Size = UDim2.new(0, 22, 0, 22)
+	markButton.Position = UDim2.new(0, 5, 0, 5)
+	markButton.Text = ""
+	markButton.BackgroundColor3 = buttonColor
+	markButton.TextColor3 = Color3.fromRGB(100, 255, 100)
+	markButton.Font = Enum.Font.Gotham
+	markButton.TextSize = 16
+	markButton.BorderSizePixel = 0
+	markButton.ZIndex = 6
+	markButton.Parent = logFrame
+	Instance.new("UICorner", markButton).CornerRadius = cornerSize
+
+	local innerSquare = Instance.new("Frame")
+	innerSquare.Size = UDim2.new(0, 14, 0, 14)
+	innerSquare.Position = UDim2.new(0, 4, 0, 4)
+	innerSquare.BackgroundColor3 = highlightColor
+	innerSquare.BorderSizePixel = 0
+	innerSquare.Visible = false
+	innerSquare.ZIndex = 7
+	innerSquare.Parent = markButton
+	Instance.new("UICorner", innerSquare).CornerRadius = cornerSize
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(1, -36, 0, 0)
+	textLabel.Position = UDim2.new(0, 35, 0, 5)
+	textLabel.Text = msg
+	textLabel.Font = Enum.Font.Code
+	textLabel.TextSize = 14
+	textLabel.TextWrapped = true
+	textLabel.AutomaticSize = Enum.AutomaticSize.Y
+	textLabel.BackgroundTransparency = 1
+	textLabel.TextXAlignment = Enum.TextXAlignment.Left
+	textLabel.TextYAlignment = Enum.TextYAlignment.Top
+	textLabel.TextColor3 = msgType == Enum.MessageType.MessageError and Color3.fromRGB(255, 80, 80)
+		or msgType == Enum.MessageType.MessageWarning and Color3.fromRGB(255, 200, 0)
+		or textColor
+	textLabel.ZIndex = 5
+	textLabel.Parent = logFrame
+
+	local isSelected = false
+	markButton.MouseButton1Click:Connect(function()
+		isSelected = not isSelected
+		innerSquare.Visible = isSelected
+		if isSelected then
+			selectedLogs[logFrame] = msg
+		else
+			selectedLogs[logFrame] = nil
+		end
+	end)
+end
+
+local function clearLogs()
+	selectedLogs = {}
+	for _, child in ipairs(scroll:GetChildren()) do
+		if child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+end
+
+LogService.MessageOut:Connect(function(message, msgType)
+	if searchBox.Text == "" or string.find(string.lower(message), string.lower(searchBox.Text)) then
+		addLog(message, msgType)
+	end
+end)
+
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+	for _, child in ipairs(scroll:GetChildren()) do
+		if child:IsA("Frame") then
+			local label = child:FindFirstChildOfClass("TextLabel")
+			if label then
+				child.Visible = searchBox.Text == "" or string.find(string.lower(label.Text), string.lower(searchBox.Text)) ~= nil
+			end
+		end
+	end
+end)
+
+copyButton.MouseButton1Click:Connect(function()
+	local text = ""
+	for _, msg in pairs(selectedLogs) do
+		text = text .. msg .. "\n"
+	end
+	if text ~= "" then
+		if setclipboard then
+			setclipboard(text)
+		else
+			warn("Clipboard API not available")
+		end
+	end
+end)
+
+clearButton.MouseButton1Click:Connect(clearLogs)
+
+local isOpen = false
+local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local function toggleConsole()
+	if isOpen then
+		local tween = TweenService:Create(consoleFrame, tweenInfo, {Position = UDim2.new(1, 0, 0, 0)})
+		tween:Play()
+	else
+		local tween = TweenService:Create(consoleFrame, tweenInfo, {Position = UDim2.new(0.6, 0, 0, 0)})
+		tween:Play()
+	end
+	isOpen = not isOpen
+end
+
+toggleButton.MouseButton1Click:Connect(toggleConsole)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if not gameProcessed and input.KeyCode == Enum.KeyCode.Escape and isOpen then
+		toggleConsole()
+	end
+end)
