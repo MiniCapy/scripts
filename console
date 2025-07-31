@@ -30,7 +30,6 @@ toggleButton.TextColor3 = textColor
 toggleButton.BorderSizePixel = 0
 toggleButton.ZIndex = 10
 toggleButton.Parent = gui
-Instance.new("UICorner", toggleButton).CornerRadius = cornerSize
 
 local consoleFrame = Instance.new("Frame")
 consoleFrame.Size = UDim2.new(0.4, 0, 1, 0)
