@@ -86,8 +86,8 @@ scroll.Position = UDim2.new(0, 20, 0, 110)
 scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 scroll.BackgroundTransparency = 1
-scroll.ScrollBarThickness = 8
-scroll.ScrollBarImageColor3 = Color3.fromRGB(160, 160, 160)
+scroll.ScrollBarThickness = 0
+scroll.ScrollingDirection = Enum.ScrollingDirection.Y
 scroll.ZIndex = 5
 scroll.Parent = consoleFrame
 
@@ -221,3 +221,5 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		toggleConsole()
 	end
 end)
+
+print("console v1.1 by minicapy 🍉")
