@@ -30,6 +30,7 @@ toggleButton.TextColor3 = textColor
 toggleButton.BorderSizePixel = 0
 toggleButton.ZIndex = 10
 toggleButton.Parent = gui
+Instance.new("UICorner", toggleButton).CornerRadius = cornerSize
 
 local consoleFrame = Instance.new("Frame")
 consoleFrame.Size = UDim2.new(0.4, 0, 1, 0)
@@ -39,7 +40,6 @@ consoleFrame.BorderSizePixel = 0
 consoleFrame.Visible = true
 consoleFrame.ZIndex = 5
 consoleFrame.Parent = gui
-Instance.new("UICorner", consoleFrame).CornerRadius = cornerSize
 
 local searchBox = Instance.new("TextBox")
 searchBox.PlaceholderText = "Search logs..."
