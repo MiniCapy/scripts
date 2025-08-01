@@ -1,0 +1,105 @@
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RenderToggleUI"
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 240, 0, 60)
+MainFrame.Position = UDim2.new(0.5, -120, 0.45, 0)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = Color3.fromRGB(240, 200, 200)
+MainFrame.BackgroundTransparency = 0
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local FrameCorner = Instance.new("UICorner")
+FrameCorner.CornerRadius = UDim.new(0, 14)
+FrameCorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Text = "3D Rendering"
+Title.TextColor3 = Color3.fromRGB(120, 0, 0)
+Title.TextSize = 18
+Title.Font = Enum.Font.GothamMedium
+Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Position = UDim2.new(0, 20, 0, 0)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+local ToggleContainer = Instance.new("TextButton")
+ToggleContainer.Name = "ToggleContainer"
+ToggleContainer.Text = ""
+ToggleContainer.BackgroundTransparency = 1
+ToggleContainer.Size = UDim2.new(0, 60, 0, 32)
+ToggleContainer.Position = UDim2.new(1, -70, 0.5, -16)
+ToggleContainer.AnchorPoint = Vector2.new(0, 0)
+ToggleContainer.AutoButtonColor = false
+ToggleContainer.Parent = MainFrame
+
+local ToggleBackground = Instance.new("Frame")
+ToggleBackground.Name = "ToggleBackground"
+ToggleBackground.Size = UDim2.new(0, 60, 0, 28)
+ToggleBackground.Position = UDim2.new(0.5, 0, 0.5, 0)
+ToggleBackground.AnchorPoint = Vector2.new(0.5, 0.5)
+ToggleBackground.BackgroundColor3 = Color3.fromRGB(255, 180, 180)
+ToggleBackground.BorderSizePixel = 0
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleBackground
+
+local ToggleButton = Instance.new("Frame")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 24, 0, 24)
+ToggleButton.Position = UDim2.new(0, 2, 0.5, 0)
+ToggleButton.AnchorPoint = Vector2.new(0, 0.5)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 240, 240)
+ToggleButton.BorderSizePixel = 0
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(1, 0)
+ButtonCorner.Parent = ToggleButton
+
+ToggleBackground.Parent = ToggleContainer
+ToggleButton.Parent = ToggleBackground
+
+local renderEnabled = false
+local isTweening = false
+
+local function toggleRendering()
+	if isTweening then return end
+	isTweening = true
+
+	renderEnabled = not renderEnabled
+	RunService:Set3dRenderingEnabled(renderEnabled)
+
+	local targetPosition = renderEnabled and UDim2.new(1, -26, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+	local targetBackgroundColor = renderEnabled and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(255, 180, 180)
+	local targetButtonColor = renderEnabled and Color3.fromRGB(255, 220, 220) or Color3.fromRGB(255, 240, 240)
+
+	TweenService:Create(ToggleButton, TweenInfo.new(0.25), {
+		Position = targetPosition,
+		BackgroundColor3 = targetButtonColor
+	}):Play()
+
+	TweenService:Create(ToggleBackground, TweenInfo.new(0.25), {
+		BackgroundColor3 = targetBackgroundColor
+	}):Play()
+
+	task.delay(0.3, function()
+		isTweening = false
+	end)
+end
+
+ToggleContainer.MouseButton1Click:Connect(toggleRendering)
+
+toggleRendering()
