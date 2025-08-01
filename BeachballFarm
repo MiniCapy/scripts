@@ -1,4 +1,5 @@
 --not my script
+--просто перезалив для себя
 pcall(function()
     repeat wait() until game:IsLoaded()
     local TeleportService = cloneref(game:GetService("TeleportService"))
