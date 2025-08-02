@@ -1,0 +1,112 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+local Window = Rayfield:CreateWindow({
+    Name = "Cola Hub | Mango Simulator",
+    LoadingTitle = "Cola Hub | Mango Simulator",
+    LoadingSubtitle = "by minicapy🍉",
+    ConfigurationSaving = {
+        Enabled = false
+    },
+    Theme = "Bloom"
+})
+
+local MainTab = Window:CreateTab("Mango")
+local IslandsTab = Window:CreateTab("Islands")
+
+local mangoEvent = ReplicatedStorage:FindFirstChild("MangoesEvt") or ReplicatedStorage:FindFirstChildWhichIsA("RemoteEvent")
+local autoClickerEnabled = false
+local noCooldownEnabled = false
+local infiniteMangoEnabled = false
+
+local function toggleAutoClicker()
+    autoClickerEnabled = not autoClickerEnabled
+    if autoClickerEnabled then
+        coroutine.wrap(function()
+            while autoClickerEnabled and task.wait() do
+                mangoEvent:FireServer(LocalPlayer)
+            end
+        end)()
+    end
+end
+
+local function toggleNoCooldown()
+    noCooldownEnabled = not noCooldownEnabled
+    if noCooldownEnabled then
+        hookfunction(getrenv().wait, function()
+            return task.wait(0)
+        end)
+    else
+        restorefunction(getrenv().wait)
+    end
+end
+
+local function toggleInfiniteMango()
+    infiniteMangoEnabled = not infiniteMangoEnabled
+    if infiniteMangoEnabled then
+        local originalFire = mangoEvent.FireServer
+        hookfunction(originalFire, function(self, ...)
+            local args = {...}
+            if args[1] == LocalPlayer then
+                args[2] = math.huge
+            end
+            return originalFire(self, unpack(args))
+        end)
+    else
+        restorefunction(mangoEvent.FireServer)
+    end
+end
+
+MainTab:CreateToggle({
+    Name = "Infinity Mango",
+    CurrentValue = false,
+    Callback = toggleInfiniteMango
+})
+
+MainTab:CreateToggle({
+    Name = "No Cooldown",
+    CurrentValue = false,
+    Callback = toggleNoCooldown
+})
+
+MainTab:CreateToggle({
+    Name = "Auto Mango",
+    CurrentValue = false,
+    Callback = toggleAutoClicker
+})
+
+IslandsTab:CreateButton({
+    Name = "0 Island",
+    Callback = function()
+        LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(game:GetService("Workspace").SpawnLocation.Position))
+    end
+})
+
+IslandsTab:CreateButton({
+    Name = "1 Island",
+    Callback = function()
+        LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(Vector3.new(144.63, 2550.12, -14.88)))
+    end
+})
+
+IslandsTab:CreateButton({
+    Name = "2 Island",
+    Callback = function()
+        LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(Vector3.new(536.59, 5646.93, 186.81)))
+    end
+})
+
+IslandsTab:CreateButton({
+    Name = "3 Island",
+    Callback = function()
+        LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(Vector3.new(-110.05, 9255.47, 73.21)))
+    end
+})
+
+Rayfield:Notify({
+    Title = "Cola Hub Loaded",
+    Content = "by minicapy🍉",
+    Duration = 3
+})
