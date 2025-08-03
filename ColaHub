@@ -1,0 +1,264 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local Window = Rayfield:CreateWindow({
+    Name = "Cola Hub",
+    LoadingTitle = "Cola Hub is loading...",
+    LoadingSubtitle = "by minicapy🍉",
+    ConfigurationSaving = {
+        Enabled = false
+    },
+    Theme = "Bloom"
+})
+
+local PlayerTab = Window:CreateTab("Player")
+local ESPTab = Window:CreateTab("ESP")
+local MiscTab = Window:CreateTab("Misc")
+
+local flyEnabled = false
+local flySpeed = 60
+local flyConnection
+local bv, bg
+
+local walkSpeedEnabled = false
+local walkSpeedValue = 16
+
+local jumpPowerEnabled = false
+local jumpPowerValue = 50
+
+local flingEnabled = false
+
+local function disableFly()
+    if flyConnection then flyConnection:Disconnect() end
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.PlatformStand = false
+        if bv then bv:Destroy() end
+        if bg then bg:Destroy() end
+    end
+    flyEnabled = false
+end
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    character:WaitForChild("Humanoid").Died:Connect(function()
+        disableFly()
+    end)
+    
+    if walkSpeedEnabled then
+        character:WaitForChild("Humanoid").WalkSpeed = walkSpeedValue
+    end
+    
+    if jumpPowerEnabled then
+        character:WaitForChild("Humanoid").JumpPower = jumpPowerValue
+    end
+end)
+
+PlayerTab:CreateToggle({
+    Name = "Fly",
+    CurrentValue = false,
+    Callback = function(Value)
+        flyEnabled = Value
+        if flyEnabled then
+            bv = Instance.new("BodyVelocity")
+            bv.Name = "VelocityHandler"
+            bv.Parent = LocalPlayer.Character.HumanoidRootPart
+            bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            bv.Velocity = Vector3.new(0, 0, 0)
+
+            bg = Instance.new("BodyGyro")
+            bg.Name = "GyroHandler"
+            bg.Parent = LocalPlayer.Character.HumanoidRootPart
+            bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+            bg.P = 1000
+            bg.D = 50
+
+            LocalPlayer.Character.Humanoid.PlatformStand = true
+
+            flyConnection = RunService.RenderStepped:Connect(function()
+                if not flyEnabled then return end
+                
+                bg.CFrame = workspace.CurrentCamera.CoordinateFrame
+                local controlModule = require(LocalPlayer.PlayerScripts:WaitForChild('PlayerModule'):WaitForChild("ControlModule"))
+                local direction = controlModule:GetMoveVector()
+                bv.Velocity = Vector3.new()
+
+                if direction.X ~= 0 then
+                    bv.Velocity = bv.Velocity + workspace.CurrentCamera.CFrame.RightVector * (direction.X * flySpeed)
+                end
+                if direction.Z ~= 0 then
+                    bv.Velocity = bv.Velocity - workspace.CurrentCamera.CFrame.LookVector * (direction.Z * flySpeed)
+                end
+            end)
+        else
+            disableFly()
+        end
+    end
+})
+
+PlayerTab:CreateSlider({
+    Name = "Fly Speed",
+    Range = {20, 500},
+    Increment = 5,
+    CurrentValue = 60,
+    Callback = function(Value)
+        flySpeed = Value
+    end
+})
+
+PlayerTab:CreateToggle({
+    Name = "WalkSpeed",
+    CurrentValue = false,
+    Callback = function(Value)
+        walkSpeedEnabled = Value
+        if LocalPlayer.Character then
+            LocalPlayer.Character.Humanoid.WalkSpeed = Value and walkSpeedValue or 16
+        end
+    end
+})
+
+PlayerTab:CreateSlider({
+    Name = "WalkSpeed Value",
+    Range = {16, 100},
+    Increment = 2,
+    CurrentValue = 16,
+    Callback = function(Value)
+        walkSpeedValue = Value
+        if walkSpeedEnabled and LocalPlayer.Character then
+            LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        end
+    end
+})
+
+PlayerTab:CreateToggle({
+    Name = "JumpPower",
+    CurrentValue = false,
+    Callback = function(Value)
+        jumpPowerEnabled = Value
+        if LocalPlayer.Character then
+            LocalPlayer.Character.Humanoid.JumpPower = Value and jumpPowerValue or 50
+        end
+    end
+})
+
+PlayerTab:CreateSlider({
+    Name = "JumpPower Value",
+    Range = {50, 200},
+    Increment = 5,
+    CurrentValue = 50,
+    Callback = function(Value)
+        jumpPowerValue = Value
+        if jumpPowerEnabled and LocalPlayer.Character then
+            LocalPlayer.Character.Humanoid.JumpPower = Value
+        end
+    end
+})
+
+PlayerTab:CreateToggle({
+    Name = "Fling",
+    CurrentValue = false,
+    Callback = function(Value)
+        flingEnabled = Value
+        if flingEnabled then
+            coroutine.wrap(function()
+                while flingEnabled and RunService.Heartbeat:Wait() do
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local hrp = LocalPlayer.Character.HumanoidRootPart
+                        local vel = hrp.Velocity
+                        hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                        RunService.RenderStepped:Wait()
+                        hrp.Velocity = vel
+                        RunService.Stepped:Wait()
+                        hrp.Velocity = vel + Vector3.new(0, 0.1, 0)
+                    end
+                end
+            end)()
+        end
+    end
+})
+
+local espEnabled = false
+local pinkColor = Color3.fromRGB(255, 182, 193)
+local espCache = {}
+
+local function createESP(character)
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ColaESP"
+    highlight.FillColor = pinkColor
+    highlight.OutlineColor = pinkColor
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = character
+    
+    espCache[character] = highlight
+end
+
+local function removeESP(character)
+    if espCache[character] then
+        espCache[character]:Destroy()
+        espCache[character] = nil
+    end
+end
+
+ESPTab:CreateToggle({
+    Name = "ESP",
+    CurrentValue = false,
+    Callback = function(Value)
+        espEnabled = Value
+        if espEnabled then
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    createESP(player.Character)
+                end
+            end
+            
+            Players.PlayerAdded:Connect(function(player)
+                player.CharacterAdded:Connect(function(character)
+                    if espEnabled then
+                        createESP(character)
+                    end
+                end)
+            end)
+        else
+            for character, highlight in pairs(espCache) do
+                removeESP(character)
+            end
+        end
+    end
+})
+
+MiscTab:CreateButton({
+    Name = "FPS Unlocker",
+    Callback = function()
+        setfpscap(999)
+        Rayfield:Notify({
+            Title = "FPS Unlocked",
+            Content = "FPS limit removed",
+            Duration = 3
+        })
+    end
+})
+
+MiscTab:CreateToggle({
+    Name = "Anti AFK",
+    CurrentValue = false,
+    Callback = function(Value)
+        if Value then
+            local vu = game:GetService("VirtualUser")
+            game:GetService("Players").LocalPlayer.Idled:connect(function()
+                vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            end)
+        end
+    end
+})
+
+Rayfield:Notify({
+    Title = "Cola Hub",
+    Content = "Cola Hub Loaded",
+    Duration = 3
+})
