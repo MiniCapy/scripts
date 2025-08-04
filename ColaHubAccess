@@ -1,0 +1,29 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Get ColaHub Script",
+    Icon = 0,
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "by minicapy",
+    ShowText = "Rayfield",
+    Theme = "Bloom",
+    ConfigurationSaving = {
+        Enabled = false
+    }
+})
+
+local Tab = Window:CreateTab("Script", "rewind")
+
+local Button = Tab:CreateButton({
+    Name = "Copy Script Link",
+    Callback = function()
+        setclipboard("https://link-hub.net/1377753/6UYAUpvuMHxR")
+        
+        Rayfield:Notify({
+            Title = "Link Copied!",
+            Content = "ColaHub script link has been copied to clipboard",
+            Duration = 3,
+            Image = 0,
+        })
+    end,
+})
