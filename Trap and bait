@@ -1,0 +1,108 @@
+-- why are you looking here??
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local requestRolls = ReplicatedStorage.remotes.client.ui.abilities.request_rolls
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local guiParent = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "InfiniteMoneyGui"
+screenGui.Parent = guiParent
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 250, 0, 160)
+mainFrame.Position = UDim2.new(0.5, -125, 0.3, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+mainFrame.Parent = screenGui
+mainFrame.Active = true -- im (minicapyy) just added this simple but useful func
+mainFrame.Draggable = true
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 230, 0, 40)
+toggleBtn.Position = UDim2.new(0, 10, 0, 10)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+toggleBtn.Text = "Infinite Money: OFF"
+toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+toggleBtn.Parent = mainFrame
+
+local idinahyibutton = Instance.new("TextButton")
+idinahyibutton.Size = UDim2.new(0, 30, 0, 30)
+idinahyibutton.Position = UDim2.new(0, 30, 0, 40)
+idinahyibutton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+idinahyibutton.Text = '×'
+idinahyibutton.TextColor3 = Color3.new(1, 1, 1)
+idinahyibutton.Parent = mainFrame
+-- мне лень функциональность писать, завтра
+-- ладно ща напишу
+idinahyibutton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+local amountInput = Instance.new("TextBox")
+amountInput.Size = UDim2.new(0, 230, 0, 40)
+amountInput.Position = UDim2.new(0, 10, 0, 60)
+amountInput.PlaceholderText = "Enter amount (-2000 to -2e17)"
+amountInput.Text = "-2000"
+amountInput.ClearTextOnFocus = false
+amountInput.TextColor3 = Color3.new(1, 1, 1)
+amountInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+amountInput.Parent = mainFrame
+
+-- лабел
+
+local explanationLabel = Instance.new("TextLabel")
+explanationLabel.Size = UDim2.new(0, 230, 0, 20)
+explanationLabel.Position = UDim2.new(0, 10, 0, 105)
+explanationLabel.BackgroundTransparency = 1
+explanationLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+explanationLabel.Text = "More negative = more money given"
+explanationLabel.TextScaled = true
+explanationLabel.Font = Enum.Font.SourceSans
+explanationLabel.Parent = mainFrame
+
+-- кредитс 
+
+local credits = Instance.new("TextLabel")
+credits.Size = UDim2.new(0, 230, 0, 25)
+credits.Position = UDim2.new(0, 10, 0, 130)
+credits.BackgroundTransparency = 1
+credits.TextColor3 = Color3.fromRGB(200, 200, 200)
+credits.Text = "Credits: exzblaze12, minicapyy"
+credits.TextScaled = true
+credits.Font = Enum.Font.SourceSansItalic
+credits.Parent = mainFrame
+
+-- какашки какие то
+local spamming = false
+local delayTime = 0.5
+
+local function validAmount(text)
+    local num = tonumber(text)
+    return num and num <= -2000 and num >= -200000000000000000, num
+end
+-- функциональность 
+local spamThread
+
+toggleBtn.MouseButton1Click:Connect(function()
+    spamming = not spamming
+    toggleBtn.Text = spamming and "Infinite Money: ON" or "Infinite Money: OFF"
+
+    if spamming then
+        spamThread = coroutine.create(function()
+            while spamming do
+                local valid, amt = validAmount(amountInput.Text)
+                if valid then
+                    local success, err = pcall(function()
+                        requestRolls:InvokeServer(amt)
+                    end)
+                    if not success then warn("InvokeServer error:", err) end
+                else
+                    warn("Invalid amount")
+                end
+                wait(delayTime)
+            end
+        end)
+        coroutine.resume(spamThread)
+    end
+end)
