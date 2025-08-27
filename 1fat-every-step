@@ -1,0 +1,118 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ColaHub"
+ScreenGui.Parent = game.CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 200, 0, 100)
+MainFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0.05, 0)
+UICorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(0, 200, 0, 25)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Title.Text = "Cola Hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamBold
+Title.BorderSizePixel = 0
+
+local UICorner2 = Instance.new("UICorner")
+UICorner2.CornerRadius = UDim.new(0.5, 0)
+UICorner2.Parent = Title
+
+local WinButton = Instance.new("TextButton")
+WinButton.Name = "WinButton"
+WinButton.Size = UDim2.new(0, 180, 0, 30)
+WinButton.Position = UDim2.new(0, 10, 0, 35)
+WinButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+WinButton.Text = "Win AutoFarm: Off"
+WinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+WinButton.TextSize = 14
+WinButton.Font = Enum.Font.Gotham
+WinButton.BorderSizePixel = 0
+
+local UICorner3 = Instance.new("UICorner")
+UICorner3.CornerRadius = UDim.new(0.5, 0)
+UICorner3.Parent = WinButton
+
+Title.Parent = MainFrame
+WinButton.Parent = MainFrame
+MainFrame.Parent = ScreenGui
+
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+local WinEnabled = false
+
+local winPoint = Vector3.new(688.17, 148.01, -840.14)
+
+local function TeleportToPoint(point)
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.CFrame = CFrame.new(point)
+    end
+end
+
+WinButton.MouseButton1Click:Connect(function()
+    WinEnabled = not WinEnabled
+    WinButton.Text = "Win AutoFarm: " .. (WinEnabled and "On" or "Off")
+    
+    while WinEnabled do
+        TeleportToPoint(winPoint)
+        wait(0.01)
+        
+        if not WinEnabled then
+            break
+        end
+    end
+end)
