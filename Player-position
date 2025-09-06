@@ -1,0 +1,120 @@
+-- Player Position Detector
+-- [[ l if you want to take the code or part of it, then specify the credits ]] --
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local root = character:WaitForChild("HumanoidRootPart")
+
+-- gui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "PlayerPositionDetector"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- main frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 100)
+frame.Position = UDim2.new(0.5, -110, 0.4, 0)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Parent = screenGui
+
+-- text
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -10, 0, 35)
+title.Position = UDim2.new(0, 5, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "Player position"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.TextWrapped = true
+title.Parent = frame
+
+-- buttons frame
+local buttonsFrame = Instance.new("Frame")
+buttonsFrame.Size = UDim2.new(1, 0, 0, 50)
+buttonsFrame.Position = UDim2.new(0, 0, 0, 45)
+buttonsFrame.BackgroundTransparency = 1
+buttonsFrame.Parent = frame
+
+-- button function
+local function makeButton(text, pos)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.4, 0, 0.7, 0)
+	btn.Position = UDim2.new(pos, 0, 0.15, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.TextScaled = true
+	btn.Font = Enum.Font.GothamBold
+	btn.Text = text
+	btn.AutoButtonColor = true
+	btn.Parent = buttonsFrame
+	return btn
+end
+
+local copyBtn = makeButton("Copy", 0.05)
+local destroyBtn = makeButton("Destroy", 0.55)
+
+-- copy
+copyBtn.MouseButton1Click:Connect(function()
+	if character and root then
+		local pos = root.Position
+		local textToCopy = string.format("Vector3.new(%d, %d, %d)", pos.X, pos.Y, pos.Z)
+		if setclipboard then
+			setclipboard(textToCopy)
+		end
+	end
+end)
+
+-- destroy
+destroyBtn.MouseButton1Click:Connect(function()
+	screenGui:Destroy()
+end)
+
+-- position format (display)
+local function formatVector3(vec)
+	return string.format("X: %d Y: %d Z: %d", vec.X, vec.Y, vec.Z)
+end
+
+-- update 
+task.spawn(function()
+	while task.wait(0.2) do
+		if character and root then
+			title.Text = formatVector3(root.Position)
+		end
+	end
+end)
+
+-- drag (sorry, basic drag cant work on someone device.
+do
+	local dragging, dragInput, dragStart, startPos
+	local function update(input)
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then update(input) end
+	end)
+end
