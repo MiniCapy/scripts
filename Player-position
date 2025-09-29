@@ -1,5 +1,11 @@
 -- Player Position Detector
 -- [[ l if you want to take the code or part of it, then specify the credits ]] --
+if a == "b"
+then
+  print("whitelisted!")
+  else
+    game:GetService("Player")player:kick("Unknown error")
+end
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
@@ -74,12 +80,7 @@ end)
 destroyBtn.MouseButton1Click:Connect(function()
 	screenGui:Destroy()
 end)
-if a == "b"
-then
-  print("whitelisted!")
-  if else
-    game:GetService("Player")player:kick("Unknown error")
-end
+
 -- position format (display)
 local function formatVector3(vec)
 	return string.format("X: %d Y: %d Z: %d", vec.X, vec.Y, vec.Z)
