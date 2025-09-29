@@ -1,11 +1,13 @@
--- Player Position Detector
--- [[ l if you want to take the code or part of it, then specify the credits ]] --
+-- whitelist
 if a == "b"
 then
   print("whitelisted!")
   else
     game:GetService("Player")player:kick("Unknown error")
 end
+-- Player Position Detector
+-- [[ l if you want to take the code or part of it, then specify the credits ]] --
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
