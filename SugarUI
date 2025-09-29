@@ -1,0 +1,105 @@
+-- sugarUI Library
+-- [[ credits: 🍉 minicapy 🍉 ]] --
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local sugarUI = {}
+sugarUI.__index = sugarUI
+
+-- gui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "sugarUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- loading
+do
+    local loading = Instance.new("TextLabel")
+    loading.Size = UDim2.new(1, 0, 1, 0)
+    loading.BackgroundTransparency = 1
+    loading.Text = "SugarUI"
+    loading.TextColor3 = Color3.fromRGB(255, 255, 255)
+    loading.TextScaled = true
+    loading.Font = Enum.Font.GothamBlack
+    loading.Parent = screenGui
+
+    task.wait(1)
+    loading:Destroy()
+end
+
+-- frame
+function sugarUI:CreateWindow(titleText, size, position, rounded)
+    local frame = Instance.new("Frame")
+    frame.Size = size or UDim2.new(0, 300, 0, 200)
+    frame.Position = position or UDim2.new(0.5, -150, 0.5, -100)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.BorderSizePixel = 0
+    frame.Active = true
+    frame.Parent = screenGui
+
+    if rounded then
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, rounded)
+        corner.Parent = frame
+    end
+
+    -- title
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -10, 0, 35)
+    title.Position = UDim2.new(0, 5, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Text = titleText or "Window"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextScaled = true
+    title.Font = Enum.Font.GothamBold
+    title.TextWrapped = true
+    title.Parent = frame
+
+    return setmetatable({
+        Frame = frame,
+        Title = title
+    }, sugarUI)
+end
+
+-- button
+function sugarUI:AddButton(text, callback, rounded)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 40)
+    btn.Position = UDim2.new(0.05, 0, 0, #self.Frame:GetChildren() * 45)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    btn.AutoButtonColor = true
+    btn.Parent = self.Frame
+
+    if rounded then
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, rounded)
+        corner.Parent = btn
+    end
+
+    btn.MouseButton1Click:Connect(function()
+        if callback then callback() end
+    end)
+end
+
+-- text color
+function sugarUI:SetTextColor(label, color)
+    label.TextColor3 = color
+end
+
+-- text gradient
+function sugarUI:SetTextGradient(label, color1, color2)
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, color1),
+        ColorSequenceKeypoint.new(1, color2)
+    })
+    gradient.Rotation = 0
+    gradient.Parent = label
+end
+
+return sugarUI
