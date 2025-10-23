@@ -1,0 +1,57 @@
+local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Lib/main/source.lua"))()
+local w = lib:Window("BABFT | Candy Farm")
+local plr = game:GetService("Players").LocalPlayer
+local workspace = game:GetService("Workspace")
+local houses = workspace:FindFirstChild("Houses")
+local function getCharacter()
+    local character = plr.Character or plr.CharacterAdded:Wait()
+    return character, character:WaitForChild("HumanoidRootPart", 5)
+end
+local function antiAFK()
+    for _, v in pairs(getconnections(plr.Idled)) do
+        v:Disable()
+    end
+end
+getgenv().farm = false
+w:Toggle("Auto Farm", false, function(bool)
+    getgenv().farm = bool
+    if bool then
+        antiAFK()
+        spawn(function()
+            while getgenv().farm do
+                antiAFK()
+                wait(60)
+            end
+        end)
+        while getgenv().farm do
+            pcall(function()
+                local character, humPart = getCharacter()
+                if character and humPart and houses then
+                    local house = houses:WaitForChild("TrickOrTreatHouse", 5)
+                    if house then
+                        local door = house:WaitForChild("Door", 5)
+                        if door then
+                            local doorInnerTouch = door:WaitForChild("DoorInnerTouch", 5)
+                            if doorInnerTouch then
+                                humPart.CFrame = doorInnerTouch.CFrame
+                                wait(0.2)
+                                firetouchinterest(humPart, doorInnerTouch, 0)
+                                firetouchinterest(humPart, doorInnerTouch, 1)
+                            end
+                        end
+                    end
+                end
+            end)
+            wait(0.5)
+        end
+    end
+end)
+
+plr.CharacterAdded:Connect(function()
+    if getgenv().farm then
+        local character, humPart = getCharacter()
+        if character and humPart then
+            antiAFK()
+        end
+    end
+end)
