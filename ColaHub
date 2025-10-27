@@ -1,3 +1,33 @@
+task.wait()
+local player = game.Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+local PolicyService = game:GetService("PolicyService")
+
+-- Функция уведомления
+local function Notify(title, text)
+ pcall(function()
+  StarterGui:SetCore("SendNotification", {
+   Title = title;
+   Text = text;
+   Duration = 5;
+  })
+ end)
+end
+
+-- Проверка только подтверждённого возраста
+pcall(function()
+ local policyInfo = PolicyService:GetPolicyInfoForPlayerAsync(player)
+ local isVerified13Plus = policyInfo.AreVerifiedAccountsAllowed or not player:GetUnder13()
+
+ if isVerified13Plus then
+  Notify("Account Check", "Authorized")
+ else
+  game:Shutdown()
+ end
+end)
+
+task.wait()
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
