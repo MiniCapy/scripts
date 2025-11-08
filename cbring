@@ -1,0 +1,244 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CBringGui"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 250, 0, 180)
+mainFrame.Position = UDim2.new(0.5, -125, 0.5, -90)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundTransparency = 1
+title.Text = "cbring"
+title.TextColor3 = Color3.fromRGB(0, 162, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = mainFrame
+
+local function createOption(name, posY, labelText, buttonText, buttonColor)
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1, -20, 0, 28)
+	frame.Position = UDim2.new(0, 10, 0, posY)
+	frame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+	frame.BorderSizePixel = 0
+	frame.Parent = mainFrame
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 5)
+	corner.Parent = frame
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0.4, 0, 1, 0)
+	label.Position = UDim2.new(0, 5, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = labelText
+	label.TextColor3 = Color3.fromRGB(200, 200, 200)
+	label.TextScaled = true
+	label.Font = Enum.Font.Gotham
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = frame
+	
+	local button = Instance.new("TextButton")
+	button.Name = name
+	button.Size = UDim2.new(0.55, 0, 1, 0)
+	button.Position = UDim2.new(0.45, 0, 0, 0)
+	button.BackgroundColor3 = buttonColor
+	button.BorderSizePixel = 0
+	button.Text = buttonText
+	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.TextScaled = true
+	button.Font = Enum.Font.Gotham
+	button.Parent = frame
+	
+	local bCorner = Instance.new("UICorner")
+	bCorner.CornerRadius = UDim.new(0, 5)
+	bCorner.Parent = button
+	
+	return button
+end
+
+local modeButton = createOption("ModeButton", 45, "Mode:", "tool", Color3.fromRGB(0, 162, 255))
+local playerPullButton = createOption("PlayerPullButton", 80, "Pull Players:", "OFF", Color3.fromRGB(255, 255, 255))
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(1, -20, 0, 35)
+toggleButton.Position = UDim2.new(0, 10, 0, 120)
+toggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.BorderSizePixel = 0
+toggleButton.Text = "OFF"
+toggleButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+toggleButton.TextScaled = true
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.Parent = mainFrame
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 5)
+toggleCorner.Parent = toggleButton
+
+local blue = Color3.fromRGB(0, 162, 255)
+local white = Color3.fromRGB(255, 255, 255)
+local black = Color3.fromRGB(0, 0, 0)
+
+local isEnabled = false
+local pullPlayers = false
+local currentMode = "tool"
+local connection
+
+local function toggleMode()
+	currentMode = currentMode == "tool" and "front" or "tool"
+	modeButton.Text = currentMode
+end
+
+local function togglePlayerPull()
+	pullPlayers = not pullPlayers
+	if pullPlayers then
+		playerPullButton.Text = "ON"
+		playerPullButton.BackgroundColor3 = blue
+		playerPullButton.TextColor3 = white
+	else
+		playerPullButton.Text = "OFF"
+		playerPullButton.BackgroundColor3 = white
+		playerPullButton.TextColor3 = black
+	end
+end
+
+local function getTargetPosition()
+	if not character or not character.Parent then
+		return nil
+	end
+	
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+	
+	if currentMode == "tool" then
+		local tool = character:FindFirstChildOfClass("Tool")
+		if tool and tool:FindFirstChild("Handle") then
+			return tool.Handle.Position
+		end
+		return root.Position
+	else
+		return root.Position + root.CFrame.LookVector * 5
+	end
+end
+
+local function startBring()
+	if connection then 
+		connection:Disconnect() 
+		connection = nil
+	end
+	
+	connection = RunService.Heartbeat:Connect(function()
+		if not isEnabled then return end
+		
+		local targetPos = getTargetPosition()
+		if not targetPos then return end
+		
+		for _, obj in pairs(workspace:GetChildren()) do
+			if obj:IsA("Model") and obj ~= character and obj:FindFirstChild("HumanoidRootPart") then
+				local isPlayer = Players:GetPlayerFromCharacter(obj)
+				
+				if (pullPlayers and isPlayer) or (not pullPlayers and not isPlayer) then
+					pcall(function()
+						if obj.PrimaryPart then
+							obj:SetPrimaryPartCFrame(CFrame.new(targetPos))
+						else
+							obj:MoveTo(targetPos)
+						end
+					end)
+				end
+			end
+		end
+	end)
+end
+
+local function toggleBring()
+	isEnabled = not isEnabled
+	if isEnabled then
+		toggleButton.Text = "ON"
+		toggleButton.BackgroundColor3 = blue
+		toggleButton.TextColor3 = white
+		startBring()
+	else
+		toggleButton.Text = "OFF"
+		toggleButton.BackgroundColor3 = white
+		toggleButton.TextColor3 = black
+		if connection then 
+			connection:Disconnect()
+			connection = nil
+		end
+	end
+end
+
+modeButton.MouseButton1Click:Connect(toggleMode)
+playerPullButton.MouseButton1Click:Connect(togglePlayerPull)
+toggleButton.MouseButton1Click:Connect(toggleBring)
+
+player.CharacterAdded:Connect(function(newChar)
+	character = newChar
+	humanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
+	
+	if isEnabled then
+		if connection then
+			connection:Disconnect()
+			connection = nil
+		end
+		startBring()
+	end
+end)
+
+-- Dragging functionality
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+mainFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		mainFrame.Position = UDim2.new(
+			startPos.X.Scale, 
+			startPos.X.Offset + delta.X, 
+			startPos.Y.Scale, 
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+	end
+end)
