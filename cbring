@@ -135,7 +135,7 @@ local function getTargetPosition()
 		if tool and tool:FindFirstChild("Handle") then
 			return tool.Handle.Position
 		end
-		return root.Position
+		return nil
 	else
 		return root.Position + root.CFrame.LookVector * 5
 	end
@@ -206,7 +206,6 @@ player.CharacterAdded:Connect(function(newChar)
 	end
 end)
 
--- Dragging functionality
 local dragging = false
 local dragStart = nil
 local startPos = nil
