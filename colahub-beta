@@ -1,0 +1,437 @@
+task.wait()
+
+local player = game.Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+local PolicyService = game:GetService("PolicyService")
+
+local function Notify(title, text)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title;
+            Text = text;
+            Duration = 5;
+        })
+    end)
+end
+
+-- Авторизация
+pcall(function()
+    local policyInfo = PolicyService:GetPolicyInfoForPlayerAsync(player)
+    local isVerified13Plus = policyInfo.AreVerifiedAccountsAllowed or not player:GetUnder13()
+
+    if isVerified13Plus then
+        Notify("Account Check", "Authorized")
+    else
+        game:Shutdown()
+    end
+end)
+
+task.wait()
+
+-- Загрузка Fluent 
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local VirtualUser = game:GetService("VirtualUser")
+
+-- Окно
+local Window = Fluent:CreateWindow({
+    Title = "Cola Hub",
+    SubTitle = "by minicapy🍉",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+-- Табики
+local PlayerTab = Window:AddTab({ Title = "Player", Icon = "walk" })
+local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
+local MiscTab = Window:AddTab({ Title = "Misc", Icon = "wand" })
+local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
+
+-- Только SaveManager
+SaveManager:SetLibrary(Fluent)
+SaveManager:SetFolder("ColaHub")
+SaveManager:BuildConfigSection(SettingsTab)
+
+Window:SelectTab(1)
+
+-- Переменные для соединений
+local flyConnection
+local bv, bg
+local noclipConnection
+local tracersUpdateConnection
+local antiAFKConn
+
+local pinkColor = Color3.fromRGB(255, 182, 193)
+local espCache = {}
+local tracersCache = {}
+
+-- === ESP функции ===
+local function createESP(character)
+    if not character or not character:FindFirstChild("HumanoidRootPart") or espCache[character] then return end
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ColaESP"
+    highlight.FillColor = pinkColor
+    highlight.OutlineColor = pinkColor
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = character
+    espCache[character] = highlight
+end
+
+local function removeESP(character)
+    if espCache[character] then
+        espCache[character]:Destroy()
+        espCache[character] = nil
+    end
+end
+
+local function createTracer(character)
+    if not character or not character:FindFirstChild("HumanoidRootPart") or tracersCache[character] then return end
+    local line = Drawing.new("Line")
+    line.Visible = false
+    line.Color = pinkColor
+    line.Thickness = 2
+    line.Transparency = 0.7
+    tracersCache[character] = line
+end
+
+local function removeTracer(character)
+    if tracersCache[character] then
+        tracersCache[character]:Remove()
+        tracersCache[character] = nil
+    end
+end
+
+local function updateTracers()
+    local camera = workspace.CurrentCamera
+    local screenCenterBottom = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+    for character, line in pairs(tracersCache) do
+        if not character or not character.Parent or not character:FindFirstChild("HumanoidRootPart") then
+            removeTracer(character)
+            continue
+        end
+        local rootPart = character.HumanoidRootPart
+        local screenPoint, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+        if onScreen then
+            line.Visible = true
+            line.From = screenCenterBottom
+            line.To = Vector2.new(screenPoint.X, screenPoint.Y)
+        else
+            line.Visible = false
+        end
+    end
+end
+
+local function updatePlayers()
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            if Fluent.Options["ESP"].Value then
+                createESP(p.Character)
+            else
+                removeESP(p.Character)
+            end
+            if Fluent.Options["Tracers"].Value then
+                createTracer(p.Character)
+            else
+                removeTracer(p.Character)
+            end
+        end
+    end
+end
+
+coroutine.wrap(function()
+    while task.wait(1) do
+        updatePlayers()
+    end
+end)()
+
+-- CharacterAdded
+LocalPlayer.CharacterAdded:Connect(function(character)
+    character:WaitForChild("Humanoid").Died:Connect(function()
+        if flyConnection then
+            flyConnection:Disconnect()
+            flyConnection = nil
+            if bv then bv:Destroy() bv = nil end
+            if bg then bg:Destroy() bg = nil end
+            if character:FindFirstChildOfClass("Humanoid") then
+                character.Humanoid.PlatformStand = false
+            end
+        end
+    end)
+
+    local humanoid = character:WaitForChild("Humanoid")
+    if Fluent.Options["WalkSpeed"].Value then
+        humanoid.WalkSpeed = Fluent.Options["WalkSpeedValue"].Value
+    end
+    if Fluent.Options["JumpPower"].Value then
+        humanoid.JumpPower = Fluent.Options["JumpPowerValue"].Value
+    end
+end)
+
+-- === UI элементы ===
+
+-- Fly
+PlayerTab:AddSlider("FlySpeed", {
+    Title = "Fly Speed",
+    Min = 20,
+    Max = 500,
+    Increment = 5,
+    Rounding = 1,
+    Default = 60,
+    Callback = function() end
+})
+
+PlayerTab:AddToggle("Fly", {
+    Title = "Fly",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            local character = LocalPlayer.Character
+            if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+
+            bv = Instance.new("BodyVelocity")
+            bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            bv.Velocity = Vector3.zero
+            bv.Parent = character.HumanoidRootPart
+
+            bg = Instance.new("BodyGyro")
+            bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+            bg.P = 1000
+            bg.D = 50
+            bg.Parent = character.HumanoidRootPart
+
+            character.Humanoid.PlatformStand = true
+
+            flyConnection = RunService.RenderStepped:Connect(function()
+                if not Fluent.Options["Fly"].Value then return end
+                bg.CFrame = workspace.CurrentCamera.CoordinateFrame
+                local controlModule = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
+                local direction = controlModule:GetMoveVector()
+                bv.Velocity = Vector3.zero
+                if direction.X ~= 0 then
+                    bv.Velocity += workspace.CurrentCamera.CFrame.RightVector * (direction.X * Fluent.Options["FlySpeed"].Value)
+                end
+                if direction.Z ~= 0 then
+                    bv.Velocity -= workspace.CurrentCamera.CFrame.LookVector * (direction.Z * Fluent.Options["FlySpeed"].Value)
+                end
+            end)
+        else
+            if flyConnection then flyConnection:Disconnect() flyConnection = nil end
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                LocalPlayer.Character.Humanoid.PlatformStand = false
+            end
+            if bv then bv:Destroy() bv = nil end
+            if bg then bg:Destroy() bg = nil end
+        end
+    end
+})
+
+-- WalkSpeed
+PlayerTab:AddSlider("WalkSpeedValue", {
+    Title = "WalkSpeed Value",
+    Min = 16,
+    Max = 100,
+    Increment = 2,
+    Rounding = 1,
+    Default = 16,
+    Callback = function(Value)
+        if Fluent.Options["WalkSpeed"].Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        end
+    end
+})
+
+PlayerTab:AddToggle("WalkSpeed", {
+    Title = "WalkSpeed",
+    Default = false,
+    Callback = function(Value)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = Value and Fluent.Options["WalkSpeedValue"].Value or 16
+        end
+    end
+})
+
+-- JumpPower
+PlayerTab:AddSlider("JumpPowerValue", {
+    Title = "JumpPower Value",
+    Min = 50,
+    Max = 200,
+    Increment = 5,
+    Rounding = 1,
+    Default = 50,
+    Callback = function(Value)
+        if Fluent.Options["JumpPower"].Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = Value
+        end
+    end
+})
+
+PlayerTab:AddToggle("JumpPower", {
+    Title = "JumpPower",
+    Default = false,
+    Callback = function(Value)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = Value and Fluent.Options["JumpPowerValue"].Value or 50
+        end
+    end
+})
+
+-- Fling
+PlayerTab:AddToggle("Fling", {
+    Title = "Fling",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            coroutine.wrap(function()
+                while Fluent.Options["Fling"].Value and task.wait() do
+                    local character = LocalPlayer.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local hrp = character.HumanoidRootPart
+                        local vel = hrp.Velocity
+                        hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                        RunService.RenderStepped:Wait()
+                        hrp.Velocity = vel
+                        RunService.Stepped:Wait()
+                        hrp.Velocity = vel + Vector3.new(0, 0.1, 0)
+                    end
+                end
+            end)()
+        end
+    end
+})
+
+-- Noclip
+PlayerTab:AddToggle("Noclip", {
+    Title = "Noclip",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            local character = LocalPlayer.Character
+            if character then
+                for _, part in pairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+            noclipConnection = RunService.Stepped:Connect(function()
+                if Fluent.Options["Noclip"].Value and LocalPlayer.Character then
+                    for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            if noclipConnection then noclipConnection:Disconnect() noclipConnection = nil end
+            local character = LocalPlayer.Character
+            if character then
+                for _, part in pairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- ESP & Tracers
+ESPTab:AddToggle("ESP", {
+    Title = "ESP",
+    Default = false,
+    Callback = function()
+        updatePlayers()
+    end
+})
+
+ESPTab:AddToggle("Tracers", {
+    Title = "Tracers",
+    Default = false,
+    Callback = function(Value)
+        updatePlayers()
+        if Value then
+            if not tracersUpdateConnection then
+                tracersUpdateConnection = RunService.RenderStepped:Connect(updateTracers)
+            end
+        else
+            if tracersUpdateConnection then
+                tracersUpdateConnection:Disconnect()
+                tracersUpdateConnection = nil
+            end
+            for _, line in pairs(tracersCache) do
+                line.Visible = false
+            end
+        end
+    end
+})
+
+-- === Misc функции ===
+MiscTab:AddButton({  
+    Title = "FPS Unlocker",
+    Description = "Снимает ограничение FPS",
+    Callback = function()
+        setfpscap(999)
+        Fluent:Notify({
+            Title = "FPS Unlocked",
+            Content = "Лимит FPS снят",
+            Duration = 3
+        })
+    end
+})
+
+MiscTab:AddToggle("AntiAFK", {
+    Title = "Anti AFK",
+    Description = "Не даёт кикать за AFK",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            antiAFKConn = LocalPlayer.Idled:Connect(function()
+                VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            end)
+        else
+            if antiAFKConn then
+                antiAFKConn:Disconnect()
+                antiAFKConn = nil
+            end
+        end
+    end
+})
+
+-- === Settings ===
+SettingsTab:AddParagraph({
+    Title = "Theme",
+    Content = "Выберите тему интерфейса"
+})
+
+SettingsTab:AddDropdown("InterfaceTheme", {
+    Title = "Theme",
+    Values = {"Dark", "Darker", "Light"},
+    Default = "Dark",
+    Callback = function(Value)
+        Fluent:SetTheme(Value)
+    end
+})
+
+SaveManager:LoadAutoloadConfig()
+
+-- Загрущка тем
+if Fluent.Options["InterfaceTheme"] and Fluent.Options["InterfaceTheme"].Value then
+    Fluent:SetTheme(Fluent.Options["InterfaceTheme"].Value)
+end
+
+Fluent:Notify({
+    Title = "Cola Hub",
+    Content = "Cola Hub успешно загружен",
+    Duration = 5
+})
