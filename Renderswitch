@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local renderEnabled = false
 local isTweening = false
 
+local OverlayGui = Instance.new("ScreenGui")
 local ScreenGui = Instance.new("ScreenGui")
 local Overlay = Instance.new("Frame")
 local MainFrame = Instance.new("Frame")
@@ -17,9 +18,17 @@ local ToggleCorner = Instance.new("UICorner")
 local ToggleButton = Instance.new("Frame")
 local ButtonCorner = Instance.new("UICorner")
 
+OverlayGui.Name = "RenderOverlayGui"
+OverlayGui.IgnoreGuiInset = true
+OverlayGui.ResetOnSpawn = false
+OverlayGui.DisplayOrder = -100
+OverlayGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+OverlayGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
 ScreenGui.Name = "RenderToggleUI"
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 10
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
@@ -32,7 +41,7 @@ Overlay.BackgroundTransparency = 0
 Overlay.BorderSizePixel = 0
 Overlay.Visible = false
 Overlay.ZIndex = 0
-Overlay.Parent = ScreenGui
+Overlay.Parent = OverlayGui
 
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 200, 0, 50)
