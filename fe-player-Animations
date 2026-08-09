@@ -1,0 +1,145 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- local a = 2 -- по умолчанию Levitation
+--[[
+1  - Default
+2  - Levitation
+3  - Superhero
+4  - Ninja
+5  - Robot
+6  - Zombie
+7  - Stylish
+8  - Cartoony
+9  - Elder
+10 - Toy
+11 - Mage
+12 - Vampire
+13 - Werewolf
+14 - Astronaut
+15 - Knight
+16 - Bubbly
+17 - Pirate
+18 - Rthro
+]]
+
+local packs = {
+	[1] = { -- Default
+		run = 507767714, walk = 507777826, jump = 507765000,
+		idle1 = 507766666, idle2 = 507766951, fall = 507767968,
+		swim = 507784897, swimidle = 507785072, climb = 507765644
+	},
+	[2] = { -- Levitation
+		run = 616010382, walk = 616013216, jump = 616008936,
+		idle1 = 616006778, idle2 = 616008087, fall = 616005863,
+		swim = 616011509, swimidle = 616012453, climb = 616003713
+	},
+	[3] = { -- Superhero
+		run = 616117076, walk = 616122287, jump = 616115533,
+		idle1 = 616111295, idle2 = 616113536, fall = 616108001,
+		swim = 616119360, swimidle = 616120861, climb = 616104706
+	},
+	[4] = { -- Ninja
+		run = 656118852, walk = 656121766, jump = 656117878,
+		idle1 = 656117400, idle2 = 656118341, fall = 656115606,
+		swim = 656119721, swimidle = 656121397, climb = 656114359
+	},
+	[5] = { -- Robot
+		run = 616091570, walk = 616095330, jump = 616090535,
+		idle1 = 616088211, idle2 = 616089559, fall = 616087089,
+		swim = 616092998, swimidle = 616094091, climb = 616086039
+	},
+	[6] = { -- Zombie
+		run = 616163682, walk = 616168032, jump = 616161997,
+		idle1 = 616158929, idle2 = 616160636, fall = 616157476,
+		swim = 616165109, swimidle = 616166655, climb = 616156119
+	},
+	[7] = { -- Stylish
+		run = 616140816, walk = 616146177, jump = 616139451,
+		idle1 = 616136790, idle2 = 616138447, fall = 616134815,
+		swim = 616143378, swimidle = 616144772, climb = 616133594
+	},
+	[8] = { -- Cartoony
+		run = 742638842, walk = 742640026, jump = 742637942,
+		idle1 = 742637544, idle2 = 742638445, fall = 742637151,
+		swim = 742639220, swimidle = 742639812, climb = 742636889
+	},
+	[9] = { -- Elder
+		run = 845386501, walk = 845403856, jump = 845398858,
+		idle1 = 845397899, idle2 = 845400520, fall = 845396048,
+		swim = 845401742, swimidle = 845403127, climb = 845392038
+	},
+	[10] = { -- Toy
+		run = 782842708, walk = 782843345, jump = 782847020,
+		idle1 = 782841498, idle2 = 782845736, fall = 782846423,
+		swim = 782844582, swimidle = 782845186, climb = 782843869
+	},
+	[11] = { -- Mage
+		run = 707861613, walk = 707897309, jump = 707853694,
+		idle1 = 707742142, idle2 = 707855907, fall = 707829716,
+		swim = 707876443, swimidle = 707894699, climb = 707826056
+	},
+	[12] = { -- Vampire
+		run = 1083462077, walk = 1083473930, jump = 1083455352,
+		idle1 = 1083445855, idle2 = 1083450166, fall = 1083443587,
+		swim = 1083464683, swimidle = 1083467779, climb = 1083439238
+	},
+	[13] = { -- Werewolf
+		run = 1083216690, walk = 1083178339, jump = 1083218792,
+		idle1 = 1083195517, idle2 = 1083214717, fall = 1083189019,
+		swim = 1083222527, swimidle = 1083225406, climb = 1083182000
+	},
+	[14] = { -- Astronaut
+		run = 891636393, walk = 891636393, jump = 891627522,
+		idle1 = 891621366, idle2 = 891633237, fall = 891617961,
+		swim = 891639666, swimidle = 891663592, climb = 891609353
+	},
+	[15] = { -- Knight
+		run = 657564596, walk = 657552124, jump = 658409194,
+		idle1 = 657595757, idle2 = 657568135, fall = 657600338,
+		swim = 657560551, swimidle = 657557095, climb = 658360781
+	},
+	[16] = { -- Bubbly
+		run = 910025107, walk = 910034870, jump = 910016857,
+		idle1 = 910004836, idle2 = 910009958, fall = 910001910,
+		swim = 910028158, swimidle = 910030921, climb = 909997997
+	},
+	[17] = { -- Pirate
+		run = 750783738, walk = 750785693, jump = 750782230,
+		idle1 = 750781874, idle2 = 750782770, fall = 750780242,
+		swim = 750784579, swimidle = 750785176, climb = 750779899
+	},
+	[18] = { -- Rthro
+		run = 2510198475, walk = 2510202577, jump = 2510197830,
+		idle1 = 2510197257, idle2 = 2510196951, fall = 2510195892,
+		swim = 2510199791, swimidle = 2510201162, climb = 2510192778
+	}
+}
+
+local function applyAnimations(character)
+	local humanoid = character:WaitForChild("Humanoid")
+	local animator = humanoid:WaitForChild("Animator")
+	local animate = character:WaitForChild("Animate")
+
+	local pack = packs[a] or packs[2]
+
+	for _, track in animator:GetPlayingAnimationTracks() do
+		track:Stop(0)
+	end
+
+	animate.run.RunAnim.AnimationId = "rbxassetid://" .. pack.run
+	animate.walk.WalkAnim.AnimationId = "rbxassetid://" .. pack.walk
+	animate.jump.JumpAnim.AnimationId = "rbxassetid://" .. pack.jump
+	animate.idle.Animation1.AnimationId = "rbxassetid://" .. pack.idle1
+	animate.idle.Animation2.AnimationId = "rbxassetid://" .. pack.idle2
+	animate.fall.FallAnim.AnimationId = "rbxassetid://" .. pack.fall
+	animate.swim.Swim.AnimationId = "rbxassetid://" .. pack.swim
+	animate.swimidle.SwimIdle.AnimationId = "rbxassetid://" .. pack.swimidle
+	animate.climb.ClimbAnim.AnimationId = "rbxassetid://" .. pack.climb
+end
+
+if player.Character then
+	applyAnimations(player.Character)
+end
+
+player.CharacterAdded:Connect(applyAnimations)
